@@ -17,6 +17,8 @@ const IGNORED_SERVER_WARNINGS = new Set([
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
+  // Dropped polling requests (ECONNRESET) are harmless; don't cover the demo with an overlay.
+  server: { hmr: { overlay: false } },
   plugins: [
     devtools(),
     nitro({

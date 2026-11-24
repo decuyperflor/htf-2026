@@ -11,15 +11,30 @@ import { getLeaderboard, getWorld } from '#/lib/world.functions.ts'
 /** How often the dashboard asks the server for the latest state. */
 const POLL_MS = 3000
 
+async function loadDashboard() {
+  const [glitches, guardians, world, leaderboard] = await Promise.all([
+    getGlitches(),
+    getGuardians(),
+    getWorld(),
+    getLeaderboard(),
+  ])
+  return { glitches, guardians, world, leaderboard }
+}
+
+/** Last good dashboard data in this browser tab, shown when a poll fails. */
+let lastGood: Awaited<ReturnType<typeof loadDashboard>> | null = null
+
 export const Route = createFileRoute('/_app/')({
   loader: async () => {
-    const [glitches, guardians, world, leaderboard] = await Promise.all([
-      getGlitches(),
-      getGuardians(),
-      getWorld(),
-      getLeaderboard(),
-    ])
-    return { glitches, guardians, world, leaderboard }
+    // On the server every request loads fresh data (no sharing between users).
+    if (typeof window === 'undefined') return loadDashboard()
+    try {
+      lastGood = await loadDashboard()
+    } catch (err) {
+      // A dropped poll keeps the map on screen; the next poll tries again.
+      if (!lastGood) throw err
+    }
+    return lastGood
   },
   component: DashboardPage,
   // A failed poll (server restart, network blip) must not kill the dashboard: keep retrying.
@@ -45,11 +60,21 @@ function DashboardPage() {
   const router = useRouter()
 
   // Live updates: re-run the loader every few seconds while the tab is visible.
+  // Each poll waits for the previous one, so requests never pile up or get aborted.
   useEffect(() => {
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible') router.invalidate()
-    }, POLL_MS)
-    return () => clearInterval(id)
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout>
+    const tick = async () => {
+      if (document.visibilityState === 'visible' && router.state.status !== 'pending') {
+        await router.invalidate().catch(() => {})
+      }
+      if (!stopped) timer = setTimeout(tick, POLL_MS)
+    }
+    timer = setTimeout(tick, POLL_MS)
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+    }
   }, [router])
 
   if (!guardian) return null

@@ -242,6 +242,12 @@ export function WorldMap({
   const selected = glitches.find((g) => g.glitchId === selectedGlitch) ?? null
   const selectedLoc = selectedLocation ? (locationById.get(selectedLocation) ?? null) : null
 
+  function openQuest(sim: MonsterSim) {
+    setSelectedLocation(null)
+    setSelectedGlitch(sim.id)
+    setRegion(sim.regionId)
+  }
+
   function zoomTo(regionId: string | null) {
     setSelectedGlitch(null)
     setSelectedLocation(null)
@@ -340,7 +346,7 @@ export function WorldMap({
               <g
                 key={l.locationId}
                 transform={`translate(${l.x} ${l.y}) scale(${SCENE_SCALE})`}
-                pointerEvents={zoomedIn && l.regionId === region ? 'auto' : 'none'}
+                pointerEvents={!region || l.regionId === region ? 'auto' : 'none'}
               >
                 {here.map((sim) => {
                   const fighters: SoldierPos[] = sim.party.flatMap((id) => {
@@ -361,11 +367,23 @@ export function WorldMap({
                         sim={sim}
                         now={now}
                         attackers={sim.dyingSince !== null ? fighters.map((f) => ({ soldier: f, aim: sim })) : []}
-                        onOpen={() => {
-                          setSelectedLocation(null)
-                          setSelectedGlitch(sim.id)
-                        }}
+                        onOpen={() => openQuest(sim)}
                       />
+                      {/* Stable, generous hit area: the sprite itself is redrawn every frame. */}
+                      {sim.dyingSince === null && (
+                        <circle
+                          cx={sim.x}
+                          cy={sim.y}
+                          r={Math.max(sim.size * 1.7, 38)}
+                          fill="#fff"
+                          fillOpacity={0}
+                          className="cursor-pointer"
+                          onPointerDown={(e) => {
+                            e.stopPropagation()
+                            openQuest(sim)
+                          }}
+                        />
+                      )}
                     </g>
                   )
                 })}
