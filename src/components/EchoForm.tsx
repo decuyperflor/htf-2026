@@ -11,15 +11,29 @@ type EchoFormProps = {
   monsters?: Monster[]
   /** Regions and locations to choose where the monster was seen (new monster only). */
   world?: World
+  /** Preselect where it was seen (e.g. clicked on the map). */
+  initialLocationId?: string
+  /** Show each place's quest rank and reward in the list (the guild master sets those). */
+  showRewards?: boolean
   submitLabel?: string
   onReported: (glitchId: string) => void | Promise<void>
 }
 
-export function EchoForm({ glitchId, monsters = [], world, submitLabel = 'Report sighting', onReported }: EchoFormProps) {
+export function EchoForm({
+  glitchId,
+  monsters = [],
+  world,
+  initialLocationId,
+  showRewards = false,
+  submitLabel = 'Report sighting',
+  onReported,
+}: EchoFormProps) {
   const [description, setDescription] = useState('')
   const [monsterId, setMonsterId] = useState(monsters[0]?.monsterId ?? 'slime')
   const firstLocation = world?.locations.find((l) => l.regionId !== 'city') ?? world?.locations[0]
-  const [locationId, setLocationId] = useState(firstLocation?.locationId ?? '')
+  const [locationId, setLocationId] = useState(
+    world?.locations.some((l) => l.locationId === initialLocationId) ? initialLocationId! : (firstLocation?.locationId ?? ''),
+  )
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const choosingMonster = !glitchId && monsters.length > 0
@@ -91,7 +105,7 @@ export function EchoForm({ glitchId, monsters = [], world, submitLabel = 'Report
                   .filter((l) => l.regionId === r.regionId)
                   .map((l) => (
                     <option key={l.locationId} value={l.locationId}>
-                      {l.name} · rank {questRank(l.danger)} · {l.reward} gold
+                      {showRewards ? `${l.name} · rank ${questRank(l.danger)} · ${l.reward} gold` : l.name}
                     </option>
                   ))}
               </optgroup>

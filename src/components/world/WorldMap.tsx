@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Minus, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { GlitchSprite } from '#/components/battlefield/GlitchSprite.tsx'
@@ -68,6 +69,7 @@ export function WorldMap({
   onFocused?: () => void
 }) {
   const [region, setRegion] = useState<string | null>(null)
+  const navigate = useNavigate()
   /** Which quest ranks (location danger 1–5) are shown. */
   const [ranks, setRanks] = useState<number[]>([1, 2, 3, 4, 5])
   const [selectedGlitch, setSelectedGlitch] = useState<string | null>(null)
@@ -329,6 +331,20 @@ export function WorldMap({
   const selected = glitches.find((g) => g.glitchId === selectedGlitch) ?? null
   const selectedLoc = selectedLocation ? (locationById.get(selectedLocation) ?? null) : null
   const manage = can(me, PERMISSIONS.locationManage)
+  const spot = can(me, PERMISSIONS.echoCreate)
+  const clickArea = manage || spot
+  /** Areas with a monster still at large: only those show a rank and a reward. */
+  const occupied = new Set(glitches.filter((g) => g.status !== 'FIXED').map((g) => g.locationId))
+
+  /** Guild master: area settings (with a spot link). Adventurers: spot a monster right there. */
+  function openArea(locationId: string) {
+    if (manage) {
+      setSelectedGlitch(null)
+      setSelectedLocation(locationId)
+    } else {
+      navigate({ to: '/report', search: { location: locationId } })
+    }
+  }
 
   /** Zoom right onto a monster and its party, leaving room for the quest card on the right. */
   function openQuest(sim: MonsterSim) {
@@ -427,43 +443,58 @@ export function WorldMap({
 
           {/* Areas where monsters can be spotted */}
           {world.locations.map((l) => (
-            <g key={l.locationId} transform={`translate(${l.x} ${l.y + 4})`} pointerEvents="none">
+            <g
+              key={l.locationId}
+              transform={`translate(${l.x} ${l.y + 4})`}
+              pointerEvents={clickArea ? 'auto' : 'none'}
+              className={clickArea ? 'cursor-pointer' : undefined}
+              onClick={clickArea ? () => openArea(l.locationId) : undefined}
+            >
               <ellipse rx={24} ry={12} fill="#fffaf0" fillOpacity={0.28} stroke="#2b2340" strokeOpacity={0.45} strokeWidth={0.8} strokeDasharray="3 2" />
-              <circle r={1.8} cy={-4} fill={DANGER_COLORS[l.danger - 1]} stroke="#2b2340" strokeWidth={0.5} />
+              {occupied.has(l.locationId) && (
+                <circle r={1.8} cy={-4} fill={DANGER_COLORS[l.danger - 1]} stroke="#2b2340" strokeWidth={0.5} />
+              )}
             </g>
           ))}
 
-          {/* Area labels: rank, name, reward (clickable for the guild master) */}
+          {/* Area labels. Rank and reward only where a monster is at large; an empty
+              area is just its name. Click: spot a monster there (guild master: settings). */}
           {zoom > 0.35 &&
             world.locations.map((l) => {
-              const w = l.name.length * 3.1 + 34
-              const edit = () => {
-                setSelectedGlitch(null)
-                setSelectedLocation(l.locationId)
-              }
+              const quest = occupied.has(l.locationId)
+              const w = quest ? l.name.length * 3.1 + 34 : l.name.length * 3.1 + 12
               return (
                 <g
                   key={l.locationId}
                   transform={`translate(${l.x} ${l.y + 22})`}
                   opacity={clamp01((zoom - 0.35) / 0.3)}
-                  className={manage ? 'cursor-pointer' : undefined}
-                  role={manage ? 'button' : undefined}
-                  tabIndex={manage ? 0 : undefined}
-                  aria-label={manage ? `Set danger and reward for ${l.name}` : undefined}
-                  onClick={manage ? edit : undefined}
-                  pointerEvents={manage ? 'auto' : 'none'}
+                  className={clickArea ? 'cursor-pointer' : undefined}
+                  role={clickArea ? 'button' : undefined}
+                  tabIndex={clickArea ? 0 : undefined}
+                  aria-label={manage ? `Set danger and reward for ${l.name}` : clickArea ? `Spot a monster at ${l.name}` : undefined}
+                  onClick={clickArea ? () => openArea(l.locationId) : undefined}
+                  onKeyDown={clickArea ? (e) => e.key === 'Enter' && openArea(l.locationId) : undefined}
+                  pointerEvents={clickArea ? 'auto' : 'none'}
                 >
                   <rect x={-w / 2} y={-5.5} width={w} height={11} rx={5.5} fill="#fffaf0" stroke="#2b2340" strokeWidth={0.8} />
-                  <circle cx={-w / 2 + 6} cy={0} r={4.2} fill={DANGER_COLORS[l.danger - 1]} stroke="#2b2340" strokeWidth={0.6} />
-                  <text x={-w / 2 + 6} y={1.9} textAnchor="middle" fontSize={5} fontWeight={800} fill="#2b2340">
-                    {questRank(l.danger)}
-                  </text>
-                  <text x={-w / 2 + 12} y={1.9} fontSize={5} fontWeight={600} fill="#2b2340">
-                    {l.name}
-                  </text>
-                  <text x={w / 2 - 3} y={1.9} textAnchor="end" fontSize={4.6} fontWeight={700} fill="#b8862f">
-                    {l.reward}g
-                  </text>
+                  {quest ? (
+                    <>
+                      <circle cx={-w / 2 + 6} cy={0} r={4.2} fill={DANGER_COLORS[l.danger - 1]} stroke="#2b2340" strokeWidth={0.6} />
+                      <text x={-w / 2 + 6} y={1.9} textAnchor="middle" fontSize={5} fontWeight={800} fill="#2b2340">
+                        {questRank(l.danger)}
+                      </text>
+                      <text x={-w / 2 + 12} y={1.9} fontSize={5} fontWeight={600} fill="#2b2340">
+                        {l.name}
+                      </text>
+                      <text x={w / 2 - 3} y={1.9} textAnchor="end" fontSize={4.6} fontWeight={700} fill="#b8862f">
+                        {l.reward}g
+                      </text>
+                    </>
+                  ) : (
+                    <text x={0} y={1.9} textAnchor="middle" fontSize={5} fontWeight={600} fill="#2b2340">
+                      {l.name}
+                    </text>
+                  )}
                 </g>
               )
             })}
@@ -584,7 +615,7 @@ export function WorldMap({
       {!selected && !selectedLoc && (
         <p className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-[#fffaf0]/90 px-3 py-1 text-xs font-medium text-[#2b2340]">
           Drag to move · scroll to zoom · click a region or monster
-          {manage ? ' · click an area label to set danger & reward' : ''}
+          {manage ? ' · click an area to set danger & reward' : spot ? ' · click an area to spot a monster there' : ''}
         </p>
       )}
 

@@ -1,4 +1,5 @@
-import { X } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { Eye, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '#/components/ui/Button.tsx'
 import { questRank, type Location } from '#/lib/glitch.ts'
@@ -86,6 +87,13 @@ export function LocationPanel({
         <Button type="submit" disabled={pending}>
           {pending ? 'Saving…' : 'Save'}
         </Button>
+        <Link
+          to="/report"
+          search={{ location: location.locationId }}
+          className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-accent hover:underline"
+        >
+          <Eye className="size-4" /> Spot a monster here
+        </Link>
       </form>
     </aside>
   )

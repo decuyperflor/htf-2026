@@ -5,6 +5,9 @@ import { getMonsters } from '#/lib/monsters.functions.ts'
 import { getWorld } from '#/lib/world.functions.ts'
 
 export const Route = createFileRoute('/_app/report')({
+  // ?location=… preselects the place (clicked on the map).
+  validateSearch: (search: Record<string, unknown>): { location?: string } =>
+    typeof search.location === 'string' ? { location: search.location } : {},
   beforeLoad: ({ context }) => {
     if (!can(context.guardian, PERMISSIONS.echoCreate)) throw redirect({ to: '/' })
   },
@@ -19,6 +22,8 @@ export const Route = createFileRoute('/_app/report')({
 function ReportPage() {
   const router = useRouter()
   const { monsters, world } = Route.useLoaderData()
+  const { location } = Route.useSearch()
+  const { guardian } = Route.useRouteContext()
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
@@ -31,6 +36,8 @@ function ReportPage() {
       <EchoForm
         monsters={monsters}
         world={world}
+        initialLocationId={location}
+        showRewards={can(guardian, PERMISSIONS.locationManage)}
         submitLabel="Report monster"
         onReported={(glitchId) =>
           router.navigate({ to: '/glitches/$glitchId', params: { glitchId } })
