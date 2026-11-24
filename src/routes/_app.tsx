@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useRouter, useRouterState } from '@tanstack/react-router'
-import { Siren, X } from 'lucide-react'
+import { ShieldOff, Siren, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar } from '#/components/layout/Sidebar.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
@@ -26,7 +26,28 @@ function AppLayout() {
   const router = useRouter()
   const { theme, toggle } = useTheme()
   const [help, setHelp] = useState(false)
-  const lockdown = threats.length > 0
+  // An adventurer may decline a quest that is too strong for them: that threat no
+  // longer sounds the alarm for them (remembered per guardian, in this browser).
+  const declineKey = `achrona-declined-${guardian.guardianId}`
+  const [declined, setDeclined] = useState<string[]>([])
+  useEffect(() => {
+    try {
+      setDeclined(JSON.parse(localStorage.getItem(declineKey) ?? '[]'))
+    } catch {
+      setDeclined([])
+    }
+  }, [declineKey])
+  function decline(glitchId: string) {
+    const next = [...declined, glitchId]
+    setDeclined(next)
+    try {
+      localStorage.setItem(declineKey, JSON.stringify(next))
+    } catch {
+      // Private mode: only for this visit.
+    }
+  }
+  const alarms = threats.filter((t) => !declined.includes(t.glitchId))
+  const lockdown = alarms.length > 0
   // The map and the quest board bring their own surface; every other page is a
   // parchment sheet pinned to the guild wall.
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -82,16 +103,24 @@ function AppLayout() {
           >
             <Siren className="size-4 shrink-0 motion-safe:animate-pulse" />
             <span className="truncate">
-              LOCKDOWN · {threats[0].monsterName} at {threats[0].locationName}
-              {threats.length > 1 ? ` (+${threats.length - 1} more)` : ''}
+              LOCKDOWN · {alarms[0].monsterName} at {alarms[0].locationName}
+              {alarms.length > 1 ? ` (+${alarms.length - 1} more)` : ''}
             </span>
             <Link
-              to="/glitches/$glitchId"
-              params={{ glitchId: threats[0].glitchId }}
+              to="/"
+              search={{ quest: alarms[0].glitchId }}
               className="shrink-0 rounded-full bg-white/20 px-2.5 py-0.5 text-xs hover:bg-white/30"
             >
               View quest
             </Link>
+            <button
+              type="button"
+              onClick={() => decline(alarms[0].glitchId)}
+              title="This monster is too strong for you: stop the alarm for this quest"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-black/25 px-2.5 py-0.5 text-xs hover:bg-black/40"
+            >
+              <ShieldOff className="size-3.5" /> Decline – too strong
+            </button>
           </div>
         </>
       )}

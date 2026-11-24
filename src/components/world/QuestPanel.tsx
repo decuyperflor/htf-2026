@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { Coins, Swords, X } from 'lucide-react'
+import { Coins, Swords, Trophy, X } from 'lucide-react'
 import { useState } from 'react'
 import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
 import { StatusBadge } from '#/components/StatusBadge.tsx'
 import { Button } from '#/components/ui/Button.tsx'
 import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
 import { questRank, type GlitchListItem } from '#/lib/glitch.ts'
-import { setQuestAccepted } from '#/lib/glitches.functions.ts'
+import { completeQuest, setQuestAccepted } from '#/lib/glitches.functions.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 
 /** The quest card for a monster: rank, reward, party and the accept button. */
@@ -34,6 +34,19 @@ export function QuestPanel({
     setError(null)
     try {
       await setQuestAccepted({ data: { glitchId: glitch.glitchId, accepted: !onQuest } })
+      await onChanged()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function complete() {
+    setPending(true)
+    setError(null)
+    try {
+      await completeQuest({ data: { glitchId: glitch.glitchId } })
       await onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -109,7 +122,19 @@ export function QuestPanel({
         </p>
       )}
 
+      {slain && (
+        <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-700/20">
+          🏆 Quest complete – {glitch.reward} gold paid to the party
+        </p>
+      )}
+
       <div className="mt-auto flex flex-col gap-2">
+        {onQuest && !slain && (
+          <Button onClick={complete} disabled={pending} className="!bg-emerald-700 hover:!bg-emerald-800">
+            <Trophy className="size-4" />
+            {pending ? '…' : `Complete quest · claim ${glitch.reward} gold`}
+          </Button>
+        )}
         {can(me, PERMISSIONS.questAccept) && !slain && (
           <Button onClick={toggle} disabled={pending} variant={onQuest ? 'secondary' : 'primary'} className={onQuest ? '!border-[#2b2340]/30 !bg-white !text-[#2b2340]' : ''}>
             <Swords className="size-4" />

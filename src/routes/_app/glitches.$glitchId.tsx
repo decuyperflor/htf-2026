@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Coins, MapPin, Swords, Trash2 } from 'lucide-react'
+import { ArrowLeft, Coins, MapPin, Swords, Trash2, Trophy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { EchoForm } from '#/components/EchoForm.tsx'
 import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
@@ -14,6 +14,7 @@ import {
   deleteGlitch,
   getGlitch,
   getGlitches,
+  completeQuest,
   setQuestAccepted,
   updateGlitchStatus,
 } from '#/lib/glitches.functions.ts'
@@ -79,6 +80,16 @@ function GlitchPage() {
       await router.invalidate()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update quest')
+    }
+  }
+
+  async function complete() {
+    setError(null)
+    try {
+      await completeQuest({ data: { glitchId: glitch.glitchId } })
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not complete the quest')
     }
   }
 
@@ -168,9 +179,16 @@ function GlitchPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-fg">Quest party</h2>
           {canAccept && (
-            <Button variant={onQuest ? 'secondary' : 'primary'} onClick={() => toggleQuest(!onQuest)}>
-              <Swords className="size-4" /> {onQuest ? 'Leave quest' : 'Accept quest'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {onQuest && (
+                <Button onClick={complete} className="!bg-emerald-700 hover:!bg-emerald-800">
+                  <Trophy className="size-4" /> Complete quest · claim {glitch.reward} gold
+                </Button>
+              )}
+              <Button variant={onQuest ? 'secondary' : 'primary'} onClick={() => toggleQuest(!onQuest)}>
+                <Swords className="size-4" /> {onQuest ? 'Leave quest' : 'Accept quest'}
+              </Button>
+            </div>
           )}
         </div>
         {canAssign ? (

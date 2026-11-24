@@ -55,14 +55,21 @@ export function WorldMap({
   world,
   me,
   onChanged,
+  focusGlitchId,
+  onFocused,
 }: {
   glitches: GlitchListItem[]
   guardians: GuardianSummary[]
   world: World
   me: SessionGuardian
   onChanged: () => Promise<void> | void
+  /** Fly straight to this quest once it is on the map (e.g. from the lockdown alert). */
+  focusGlitchId?: string
+  onFocused?: () => void
 }) {
   const [region, setRegion] = useState<string | null>(null)
+  /** Which quest ranks (location danger 1–5) are shown. */
+  const [ranks, setRanks] = useState<number[]>([1, 2, 3, 4, 5])
   const [selectedGlitch, setSelectedGlitch] = useState<string | null>(null)
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [now, setNow] = useState<number | null>(null)
@@ -313,8 +320,9 @@ export function WorldMap({
   const zoom = clamp01((MAP_W / view.w - 1) / 0.8)
   const zoomedIn = zoom > 0.6
   const guardianById = new Map(guardians.map((g) => [g.guardianId, g]))
-  const all = [...sims.current.values()]
-  const active = glitches.filter((g) => g.status !== 'FIXED')
+  const shownRank = (locationId: string) => ranks.includes(locationById.get(locationId)?.danger ?? 1)
+  const all = [...sims.current.values()].filter((s) => shownRank(s.locationId))
+  const active = glitches.filter((g) => g.status !== 'FIXED' && shownRank(g.locationId))
   const counts: Record<string, number> = {}
   for (const g of active) counts[g.regionId] = (counts[g.regionId] ?? 0) + 1
   const names = Object.fromEntries(world.regions.map((r) => [r.regionId, r.name]))
@@ -344,6 +352,19 @@ export function WorldMap({
     setRegion(regionId)
     flyTo(regionId ? regionBox(regionId) : FULL)
   }
+
+  // Coming from elsewhere (lockdown alert): open that quest as soon as its monster is on the map.
+  const focused = useRef<string | null>(null)
+  useEffect(() => {
+    if (!focusGlitchId || focused.current === focusGlitchId) return
+    const sim = sims.current.get(focusGlitchId)
+    if (!sim) return
+    focused.current = focusGlitchId
+    const loc = locationById.get(sim.locationId)
+    if (loc && !ranks.includes(loc.danger)) setRanks((r) => [...r, loc.danger])
+    openQuest(sim)
+    onFocused?.()
+  })
 
   const awayFromOverview = region !== null || zoom > 0.08
 
@@ -526,6 +547,29 @@ export function WorldMap({
         <span className="rounded-full bg-[#ff3b5c] px-2.5 py-1 text-xs font-bold text-white shadow-md">
           {region ? (counts[region] ?? 0) : active.length} monsters at large
         </span>
+        <div
+          role="group"
+          aria-label="Filter by quest rank"
+          className="pointer-events-auto flex items-center gap-1 rounded-full border-2 border-[#2b2340] bg-[#fffaf0] px-1.5 py-0.5 shadow-md"
+        >
+          <span className="px-1 text-xs font-semibold text-[#2b2340]/70">Rank</span>
+          {[1, 2, 3, 4, 5].map((d) => {
+            const on = ranks.includes(d)
+            return (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={on}
+                title={on ? `Hide rank ${questRank(d)} quests` : `Show rank ${questRank(d)} quests`}
+                onClick={() => setRanks((r) => (on ? r.filter((x) => x !== d) : [...r, d]))}
+                className={`size-6 rounded-full text-xs font-black transition ${on ? 'text-[#2b2340] shadow-sm' : 'bg-transparent text-[#2b2340]/35 line-through'}`}
+                style={on ? { backgroundColor: DANGER_COLORS[d - 1] } : undefined}
+              >
+                {questRank(d)}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div className="absolute top-4 right-4 flex flex-col overflow-hidden rounded-xl border-2 border-[#2b2340] bg-[#fffaf0] shadow-md" data-panel>

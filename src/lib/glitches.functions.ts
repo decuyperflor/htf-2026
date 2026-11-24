@@ -2,7 +2,6 @@ import { createServerFn } from '@tanstack/react-start'
 import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '#/db/index.ts'
 import {
-  bounties,
   echoes,
   glitchAssignments,
   glitches,
@@ -19,7 +18,7 @@ import {
   type GlitchListItem,
   type GlitchStatus,
 } from '#/lib/glitch.ts'
-import { activeQuestOf } from '#/server/quests.ts'
+import { activeQuestOf, payBounties } from '#/server/quests.ts'
 import { requireGuardian } from '#/server/session.ts'
 
 const MAX_DESCRIPTION = 1000
@@ -197,29 +196,36 @@ export const updateGlitchStatus = createServerFn({ method: 'POST' })
         .run()
       if (result.changes === 0) throw new Error(`Glitch ${data.glitchId} not found`)
 
-      // Slain: everyone on the quest gets the location's reward (once).
-      if (data.status === 'FIXED') {
-        const { reward } = tx
-          .select({ reward: locations.reward })
-          .from(glitches)
-          .innerJoin(locations, eq(locations.locationId, glitches.locationId))
-          .where(eq(glitches.glitchId, data.glitchId))
-          .get()!
-        const party = tx
-          .select({ guardianId: glitchAssignments.guardianId })
-          .from(glitchAssignments)
-          .where(eq(glitchAssignments.glitchId, data.glitchId))
-          .all()
-        if (party.length) {
-          const paidAt = new Date().toISOString()
-          tx.insert(bounties)
-            .values(party.map((p) => ({ glitchId: data.glitchId, guardianId: p.guardianId, gold: reward, paidAt })))
-            .onConflictDoNothing()
-            .run()
-        }
-      }
+      if (data.status === 'FIXED') payBounties(tx, data.glitchId)
     })
     return { ok: true }
+  })
+
+/**
+ * A party member reports the monster slain: the quest is complete, the whole party
+ * collects the reward and is free to take the next quest.
+ */
+export const completeQuest = createServerFn({ method: 'POST' })
+  .validator((input: { glitchId: string }) => ({ glitchId: String(input?.glitchId) }))
+  .handler(async ({ data }) => {
+    const adventurer = requireGuardian(PERMISSIONS.questAccept)
+    const reward = db.transaction((tx) => {
+      const glitch = tx.select().from(glitches).where(eq(glitches.glitchId, data.glitchId)).get()
+      if (!glitch) throw new Error(`Glitch ${data.glitchId} not found`)
+      if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
+      const member = tx
+        .select({ id: glitchAssignments.guardianId })
+        .from(glitchAssignments)
+        .where(and(eq(glitchAssignments.glitchId, data.glitchId), eq(glitchAssignments.guardianId, adventurer.guardianId)))
+        .get()
+      if (!member) throw new Error('Only the quest party can complete this quest')
+      tx.update(glitches)
+        .set({ status: 'FIXED', slainAt: new Date().toISOString() })
+        .where(eq(glitches.glitchId, data.glitchId))
+        .run()
+      return payBounties(tx, data.glitchId)
+    })
+    return { ok: true, reward }
   })
 
 /** An adventurer takes on (or leaves) the quest for a monster. */

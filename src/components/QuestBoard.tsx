@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Coins, Eye, Swords } from 'lucide-react'
+import { ArrowRight, Coins, Eye, Swords, Trophy } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
 import { MonsterIcon } from '#/components/MonsterIcon.tsx'
 import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
 import { formatTimestamp } from '#/lib/format.ts'
 import { GLITCH_STATUSES, STATUS_LABELS, questRank, type GlitchListItem, type GlitchStatus } from '#/lib/glitch.ts'
-import { setQuestAccepted, updateGlitchStatus } from '#/lib/glitches.functions.ts'
+import { completeQuest, setQuestAccepted, updateGlitchStatus } from '#/lib/glitches.functions.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 
 /** The workflow, one column per step, worded like a guild would. */
@@ -70,6 +70,19 @@ export function QuestBoard({
       await onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not accept the quest')
+    }
+  }
+
+  async function complete(glitchId: string) {
+    setError(null)
+    setPending((p) => ({ ...p, [glitchId]: 'FIXED' }))
+    try {
+      await completeQuest({ data: { glitchId } })
+      await onChanged()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not complete the quest')
+    } finally {
+      setPending(({ [glitchId]: _done, ...rest }) => rest)
     }
   }
 
@@ -148,6 +161,7 @@ export function QuestBoard({
                     }}
                     onAdvance={canMove && col < 3 ? () => move(g.glitchId, GLITCH_STATUSES[col + 1]) : undefined}
                     onAccept={accept}
+                    onComplete={complete}
                   />
                 ))}
                 {!all.length && (
@@ -182,6 +196,7 @@ function QuestCard({
   onDragEnd,
   onAdvance,
   onAccept,
+  onComplete,
 }: {
   glitch: GlitchListItem
   status: GlitchStatus
@@ -194,6 +209,7 @@ function QuestCard({
   onDragEnd: () => void
   onAdvance?: () => void
   onAccept: (glitchId: string, accepted: boolean) => void
+  onComplete: (glitchId: string) => void
 }) {
   const slain = status === 'FIXED'
   const onQuest = g.assignedGuardianIds.includes(me.guardianId)
@@ -285,6 +301,15 @@ function QuestCard({
 
       {(canAccept || onAdvance) && (
         <div className="flex flex-wrap gap-2">
+          {canAccept && onQuest && (
+            <button
+              type="button"
+              onClick={() => onComplete(g.glitchId)}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border-2 border-[#2f6b2a] bg-[#2f6b2a] px-2 py-1 text-xs font-bold text-[#f1f7e8] hover:bg-[#25561f]"
+            >
+              <Trophy className="size-3.5" /> Complete · claim {g.reward} gold
+            </button>
+          )}
           {canAccept && (
             <button
               type="button"

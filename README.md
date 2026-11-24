@@ -50,7 +50,8 @@ De hele site ziet eruit als de guild hall: kurk op de muren, een houten sidebar,
 - Het startscherm is een fullscreen kaart van Achrona met regio's (Whispering Woods, Ember Peaks, Mirror Lake, Gloom Marsh, Sunscar Desert, Achrona City), elk met meerdere areas waar monsters gespot worden
 - Slepen = kaart bewegen, scrollen = zoomen; klik op een regio om in te zoomen
 - Klik op een monster: de kaart zoomt in op het gevecht en toont de quest: rank (D–S), beloning in goud, party → **Accept quest** (adventurers)
-- Een adventurer zit op max. één quest tegelijk
+- Een adventurer zit op max. één quest tegelijk. Verslagen? Klik **Complete quest · claim … gold** (op de kaart, het quest board of de quest-pagina): het monster is Slain, de hele party int de beloning en je kan een volgende quest nemen
+- Filter de kaart op quest rank (D–S) met de **Rank**-knoppen bovenaan
 - Party-leden die online zijn vechten (magische bolts); wie uitgelogd is ligt te slapen naast het monster (online = heartbeat via `sessions.last_seen_at`, < 20 s oud)
 - Het quest board en leaderboard staan op een aparte pagina (**Quest board** in de nav)
 - De guild master klikt op een locatie om danger (rank) en beloning in te stellen
@@ -62,7 +63,7 @@ De hele site ziet eruit als de guild hall: kurk op de muren, een houten sidebar,
 - **Chronicle (PDF):** `/chronicle` is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
 - **Sneltoetsen:** druk op `?` voor het overzicht (o.a. `m` kaart, `q` quest board, `/` zoeken, `j`/`k` volgende/vorige quest, `d` dark mode)
 - **Dark mode:** knop in de sidebar of `d`; onthouden per browser. Op de kaart valt de nacht
-- **Lockdown mode:** zolang er een S-klasse dreiging loose is (monster met gevaar 5 of een monster op een rank-S locatie) kleurt de app rood met een alarmbanner. Verslaan = lockdown voorbij
+- **Lockdown mode:** zolang er een S-klasse dreiging loose is (monster met gevaar 5 of een monster op een rank-S locatie) kleurt de app rood met een alarmbanner. Verslaan = lockdown voorbij. **View quest** in de alarmbanner vliegt op de kaart naar het gevecht; met **Decline – too strong** weiger je een quest die te zwaar is en stopt het alarm voor jou (per account, in deze browser)
 
 ### Datamodel
 - `guardians` → `role_id` → `roles`; rechten per rol via `role_permissions` → `permissions`

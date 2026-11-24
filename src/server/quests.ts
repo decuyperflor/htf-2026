@@ -1,7 +1,7 @@
 // Server-only quest rules (kept out of *.functions.ts so the database never reaches the client bundle).
 import { and, eq, sql } from 'drizzle-orm'
 import type { db } from '#/db/index.ts'
-import { glitchAssignments, glitches } from '#/db/schema.ts'
+import { bounties, glitchAssignments, glitches, locations } from '#/db/schema.ts'
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -20,4 +20,27 @@ export function activeQuestOf(tx: Tx, guardianId: number, exceptGlitchId: string
     )
     .get()
   return row?.glitchId ?? null
+}
+
+/** The monster is slain: everyone on the quest gets the location's reward (once). Returns that reward. */
+export function payBounties(tx: Tx, glitchId: string) {
+  const { reward } = tx
+    .select({ reward: locations.reward })
+    .from(glitches)
+    .innerJoin(locations, eq(locations.locationId, glitches.locationId))
+    .where(eq(glitches.glitchId, glitchId))
+    .get()!
+  const party = tx
+    .select({ guardianId: glitchAssignments.guardianId })
+    .from(glitchAssignments)
+    .where(eq(glitchAssignments.glitchId, glitchId))
+    .all()
+  if (party.length) {
+    const paidAt = new Date().toISOString()
+    tx.insert(bounties)
+      .values(party.map((p) => ({ glitchId, guardianId: p.guardianId, gold: reward, paidAt })))
+      .onConflictDoNothing()
+      .run()
+  }
+  return reward
 }

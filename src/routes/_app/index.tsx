@@ -7,6 +7,9 @@ import { POLL_MS, resilient, usePolling } from '#/lib/polling.ts'
 import { getWorld } from '#/lib/world.functions.ts'
 
 export const Route = createFileRoute('/_app/')({
+  // ?quest=GL-0143 flies straight to that fight (used by the lockdown alert).
+  validateSearch: (search: Record<string, unknown>): { quest?: string } =>
+    typeof search.quest === 'string' ? { quest: search.quest } : {},
   loader: resilient(async () => {
     const [glitches, guardians, world] = await Promise.all([getGlitches(), getGuardians(), getWorld()])
     return { glitches, guardians, world }
@@ -37,12 +40,22 @@ function ReconnectingNotice() {
 function MapPage() {
   const { glitches, guardians, world } = Route.useLoaderData()
   const { guardian } = Route.useRouteContext()
+  const { quest } = Route.useSearch()
+  const navigate = Route.useNavigate()
   const router = useRouter()
   usePolling()
 
   return (
     <div className={FULL_SCREEN}>
-      <WorldMap glitches={glitches} guardians={guardians} world={world} me={guardian} onChanged={() => router.invalidate()} />
+      <WorldMap
+        glitches={glitches}
+        guardians={guardians}
+        world={world}
+        me={guardian}
+        onChanged={() => router.invalidate()}
+        focusGlitchId={quest}
+        onFocused={() => navigate({ search: {}, replace: true })}
+      />
     </div>
   )
 }
