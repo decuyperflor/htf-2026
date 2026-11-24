@@ -4,8 +4,6 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
 import { getSession } from '#/lib/auth.functions.ts'
 import { resilient } from '#/lib/polling.ts'
 import { THEME_BOOT_SCRIPT } from '#/lib/theme.ts'
@@ -40,15 +38,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="bg-app font-sans antialiased">
         {children}
-        <TanStackDevtools
-          config={{ position: 'bottom-right' }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
         <Scripts />
       </body>
     </html>
