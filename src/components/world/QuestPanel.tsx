@@ -14,14 +14,12 @@ export function QuestPanel({
   guardians,
   onClose,
   onChanged,
-  onInvestigate,
 }: {
   glitch: GlitchListItem
   me: SessionGuardian
   guardians: GuardianSummary[]
   onClose: () => void
   onChanged: () => Promise<void> | void
-  onInvestigate?: () => void
 }) {
   const byId = new Map(guardians.map((g) => [g.guardianId, g]))
   const stage = questStage(glitch)
@@ -94,7 +92,7 @@ export function QuestPanel({
       </dl>
 
       <div className="mt-auto flex flex-col gap-2">
-        <QuestActions glitch={glitch} me={me} onChanged={onChanged} onInvestigate={onInvestigate} />
+        <QuestActions glitch={glitch} me={me} onChanged={onChanged} />
         <Link
           to="/glitches/$glitchId"
           params={{ glitchId: glitch.glitchId }}

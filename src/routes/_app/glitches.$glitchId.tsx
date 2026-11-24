@@ -105,7 +105,7 @@ function GlitchPage() {
               <MapPin className="size-4" /> {glitch.locationName} · {glitch.regionName}
             </span>
             <span className="rounded-full bg-[#101D38] px-3 py-1 font-bold text-white">
-              Rank {glitch.rated ? questRank(glitch.locationDanger) : "?"}
+              Rank {glitch.monsterId ? questRank(glitch.locationDanger) : "?"}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E3C47A]/25 px-3 py-1 font-bold text-[#8A6A2A]">
               <Coins className="size-4" /> {glitch.rated ? glitch.reward : "?"} gold

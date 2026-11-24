@@ -187,7 +187,8 @@ function QuestCard({
   const slain = status === 'FIXED'
   const scouting = !g.monsterId
   // Rank and reward are known once the guild master has set them.
-  const rank = g.rated ? questRank(g.locationDanger) : '?'
+  // The rank follows the monster (known once spotted); the reward waits for the guild master.
+  const rank = g.monsterId ? questRank(g.locationDanger) : '?'
 
   return (
     <article
@@ -207,8 +208,8 @@ function QuestCard({
       {/* Seal with the rank, rimmed in gold */}
       <span
         className="absolute -top-3 -right-3 flex size-11 items-center justify-center rounded-full border-2 border-[#C9A24B] font-display text-lg font-bold text-[#FAF7EF] shadow-[0_0_0_1px_#101D38,inset_0_-3px_0_rgb(0_0_0/0.25),0_3px_6px_rgb(0_0_0/0.3)]"
-        style={{ background: g.rated ? SEAL[g.locationDanger - 1] : '#4A5675' }}
-        title={g.rated ? `Rank ${rank}` : 'Rank not set yet'}
+        style={{ background: g.monsterId ? SEAL[g.locationDanger - 1] : '#4A5675' }}
+        title={g.monsterId ? `Rank ${rank}` : 'Monster unknown'}
       >
         {rank}
       </span>

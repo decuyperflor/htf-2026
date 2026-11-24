@@ -2,6 +2,7 @@ import { Link, Outlet, createFileRoute, redirect, useRouter, useRouterState } fr
 import { ShieldOff, Siren, WifiOff, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar } from '#/components/layout/Sidebar.tsx'
+import { QuestDialogHost } from '#/components/quest/QuestDialogHost.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { getThreats } from '#/lib/glitches.functions.ts'
 import { resilient, useOffline } from '#/lib/polling.ts'
@@ -94,6 +95,7 @@ function AppLayout() {
           </div>
         )}
       </main>
+      <QuestDialogHost />
 
       {lockdown && (
         <>

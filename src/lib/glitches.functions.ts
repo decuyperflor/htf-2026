@@ -19,6 +19,7 @@ import {
   type GlitchStatus,
 } from '#/lib/glitch.ts'
 import { checkAnswer, newPuzzle, retryAt, strikeBack } from '#/server/puzzle.ts'
+import { checkPick, clueFor } from '#/server/scouting.ts'
 import { activeQuestOf, payBounties } from '#/server/quests.ts'
 import { nextGlitchId, summonVillagerReports, villagerTick } from '#/server/villagers.ts'
 import { requireGuardian } from '#/server/session.ts'
@@ -51,7 +52,8 @@ function listGlitches(glitchId?: string): GlitchListItem[] {
       regionName: regions.name,
       locationDanger: sql<number>`coalesce(${glitches.danger}, ${locations.danger})`,
       reward: sql<number>`coalesce(${glitches.reward}, ${locations.reward})`,
-      rated: sql<number>`${glitches.danger} is not null`,
+      // Ranked by the monster itself; posted once the guild master set the reward.
+      rated: sql<number>`${glitches.reward} is not null`,
       echoCount: count(echoes.echoId),
       villagerReports: sql<number>`count(${echoes.reporterName})`,
     })
@@ -126,7 +128,7 @@ export const getGlitch = createServerFn({ method: 'GET' })
 /**
  * Report an echo (a sighting). Without `glitchId` the echo opens a new glitch
  * (every echo is a glitch by default) of the chosen monster type: a Spotted quest
- * that waits for the guild master's rank & reward. With `glitchId` it is added to that glitch.
+ * (ranked by its monster) that waits for the guild master's reward. With `glitchId` it is added to that glitch.
  */
 export const reportEcho = createServerFn({ method: 'POST' })
   .validator(
@@ -163,6 +165,8 @@ export const reportEcho = createServerFn({ method: 'POST' })
             timestamp,
             monsterId,
             locationId: location.locationId,
+            // The rank follows the monster; the guild master only sets the reward.
+            danger: monster.danger,
           })
           .run()
       }
@@ -210,31 +214,67 @@ export const updateGlitchStatus = createServerFn({ method: 'POST' })
 /** Scouting reward for the adventurer who identifies the monster behind the villagers' reports. */
 const SCOUT_REWARD = 25
 
+export type ScoutOption = { monsterId: string; name: string }
+export type ScoutClue = { glitchId: string; silhouette: string; options: ScoutOption[]; retryAt: number | null }
+export type ScoutResult =
+  | { ok: true; monsterId: string; monsterName: string; rank: number; reward: number }
+  | { ok: false; reason: string; retryAt: number | null }
+
+/** The open scouting quest an adventurer investigates, or an error. */
+function scoutingQuest(glitchId: string) {
+  const glitch = db.select().from(glitches).where(eq(glitches.glitchId, glitchId)).get()
+  if (!glitch) throw new Error(`Glitch ${glitchId} not found`)
+  if (glitch.status !== 'LEAKED' || glitch.monsterId) throw new Error('This monster has already been identified')
+  return glitch
+}
+
 /**
- * Investigate a scouting quest: the adventurer says which monster is behind the villagers'
- * reports. The quest becomes Spotted and waits for the guild master's rank & reward.
+ * Investigate a scouting quest: the server secretly rolls the monster behind the villagers'
+ * reports (rarer the more dangerous) and shows its silhouette with three monsters to pick from.
+ * The browser needs the monster to draw its silhouette; the pick itself is checked here.
+ */
+export const getScoutClue = createServerFn({ method: 'POST' })
+  .validator((input: { glitchId: string }) => ({ glitchId: String(input?.glitchId) }))
+  .handler(async ({ data }): Promise<ScoutClue> => {
+    requireGuardian(PERMISSIONS.questAccept)
+    scoutingQuest(data.glitchId)
+    const all = db.select({ monsterId: monsters.monsterId, name: monsters.name, danger: monsters.danger }).from(monsters).all()
+    const clue = clueFor(data.glitchId, all)
+    const name = new Map(all.map((m) => [m.monsterId, m.name]))
+    return {
+      glitchId: data.glitchId,
+      silhouette: clue.monsterId,
+      options: clue.options.map((monsterId) => ({ monsterId, name: name.get(monsterId)! })),
+      retryAt: clue.retryAt && clue.retryAt > Date.now() ? clue.retryAt : null,
+    }
+  })
+
+/**
+ * Pick the monster matching the silhouette. Right: the quest is Spotted with the monster's rank,
+ * the scout earns the scouting reward and the guild master only has to set the reward.
  */
 export const investigateQuest = createServerFn({ method: 'POST' })
-  .validator((input: { glitchId: string; monsterId: string; description: string }) => ({
+  .validator((input: { glitchId: string; monsterId: string }) => ({
     glitchId: String(input?.glitchId),
     monsterId: String(input?.monsterId),
-    description: cleanDescription(input?.description),
   }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<ScoutResult> => {
     const scout = requireGuardian(PERMISSIONS.questAccept)
+    const glitch = scoutingQuest(data.glitchId)
+    const pick = checkPick(data.glitchId, data.monsterId)
+    if (!pick.ok) return pick
+    const monster = db.select().from(monsters).where(eq(monsters.monsterId, pick.monsterId)).get()!
+    const now = new Date().toISOString()
     db.transaction((tx) => {
-      const glitch = tx.select().from(glitches).where(eq(glitches.glitchId, data.glitchId)).get()
-      if (!glitch) throw new Error(`Glitch ${data.glitchId} not found`)
-      if (glitch.status !== 'LEAKED' || glitch.monsterId) throw new Error('This monster has already been identified')
-      const monster = tx.select().from(monsters).where(eq(monsters.monsterId, data.monsterId)).get()
-      if (!monster) throw new Error(`Unknown monster: ${data.monsterId}`)
-      const now = new Date().toISOString()
-      tx.update(glitches).set({ monsterId: monster.monsterId, status: 'ASSESSING' }).where(eq(glitches.glitchId, data.glitchId)).run()
+      tx.update(glitches)
+        .set({ monsterId: monster.monsterId, danger: monster.danger, status: 'ASSESSING' })
+        .where(eq(glitches.glitchId, data.glitchId))
+        .run()
       tx.insert(echoes)
         .values({
           glitchId: data.glitchId,
           locationId: glitch.locationId,
-          description: data.description,
+          description: `Followed the villagers' clues: it's a ${monster.name}!`,
           timestamp: now,
           reportingGuardianId: scout.guardianId,
         })
@@ -244,17 +284,15 @@ export const investigateQuest = createServerFn({ method: 'POST' })
         .onConflictDoNothing()
         .run()
     })
-    return { ok: true, reward: SCOUT_REWARD }
+    return { ok: true, monsterId: monster.monsterId, monsterName: monster.name, rank: monster.danger, reward: SCOUT_REWARD }
   })
 
-/** The guild master sets a Spotted quest's rank (1..5 = D..S) and reward: adventurers can now accept it. */
+/** The guild master sets a Spotted quest's reward (its rank follows the monster): adventurers can now accept it. */
 export const rateQuest = createServerFn({ method: 'POST' })
-  .validator((input: { glitchId: string; danger: number; reward: number }) => {
-    const danger = Math.round(Number(input?.danger))
+  .validator((input: { glitchId: string; reward: number }) => {
     const reward = Math.round(Number(input?.reward))
-    if (!(danger >= 1 && danger <= 5)) throw new Error('Rank must be between D and S')
     if (!(reward >= 0 && reward <= 100_000)) throw new Error('Reward must be between 0 and 100000 gold')
-    return { glitchId: String(input?.glitchId), danger, reward }
+    return { glitchId: String(input?.glitchId), reward }
   })
   .handler(async ({ data }) => {
     requireGuardian(PERMISSIONS.locationManage)
@@ -262,7 +300,11 @@ export const rateQuest = createServerFn({ method: 'POST' })
     if (!glitch) throw new Error(`Glitch ${data.glitchId} not found`)
     if (!glitch.monsterId) throw new Error('Nobody has seen this monster yet – an adventurer has to investigate first')
     if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
-    db.update(glitches).set({ danger: data.danger, reward: data.reward }).where(eq(glitches.glitchId, data.glitchId)).run()
+    const monster = db.select({ danger: monsters.danger }).from(monsters).where(eq(monsters.monsterId, glitch.monsterId)).get()
+    db.update(glitches)
+      .set({ danger: glitch.danger ?? monster?.danger ?? 1, reward: data.reward })
+      .where(eq(glitches.glitchId, data.glitchId))
+      .run()
     return { ok: true }
   })
 
@@ -352,7 +394,7 @@ export const setQuestAccepted = createServerFn({ method: 'POST' })
 
       if (data.accepted) {
         if (glitch.status === 'LEAKED' || !glitch.monsterId) throw new Error('Investigate first: nobody knows which monster this is yet')
-        if (glitch.danger === null) throw new Error('The guild master still has to set the rank and reward of this quest')
+        if (glitch.reward === null) throw new Error('The guild master still has to set the reward of this quest')
         const busy = activeQuestOf(tx, adventurer.guardianId, data.glitchId)
         if (busy) throw new Error(`You're already on quest ${busy}. Leave that quest first – one monster at a time!`)
         if (glitch.status === 'ASSESSING') {

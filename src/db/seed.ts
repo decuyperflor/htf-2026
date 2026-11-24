@@ -105,13 +105,13 @@ const guardianRows = [
 
 // ---------- Glitches (quests), one per step of the workflow ----------
 // Scouting (villagers report, monster unknown) → Spotted (identified; the guild master sets
-// rank & reward) → Engaged (party fighting) → Slain.
+// the reward; the rank follows the monster) → Engaged (party fighting) → Slain.
 
 const glitchRows: (typeof glitches.$inferInsert)[] = [
   // Scouting: villagers keep reporting trouble at Firefly Hollow; nobody has investigated yet.
   { glitchId: 'GL-0145', status: 'LEAKED', monsterId: null, locationId: 'firefly-hollow', description: 'Villagers report strange things at Firefly Hollow: “A child went missing near Firefly Hollow this morning”', timestamp: '2026-11-10T14:30:00Z' },
-  // Spotted, waiting for the guild master's rank & reward.
-  { glitchId: 'GL-0144', status: 'ASSESSING', monsterId: 'slime', locationId: 'lily-isle', description: 'Lily pads keep teleporting one metre to the left', timestamp: '2026-11-10T14:20:00Z' },
+  // Spotted, waiting for the guild master's reward.
+  { glitchId: 'GL-0144', status: 'ASSESSING', monsterId: 'slime', locationId: 'lily-isle', description: 'Lily pads keep teleporting one metre to the left', timestamp: '2026-11-10T14:20:00Z', danger: 1 },
   // Spotted and posted: open for adventurers (the dragon also triggers lockdown).
   { glitchId: 'GL-0143', status: 'ASSESSING', monsterId: 'dragon', locationId: 'crater-rim', description: 'The volcano erupts every hour on the hour, backwards', timestamp: '2026-11-10T14:05:00Z', danger: 5, reward: 800 },
   { glitchId: 'GL-0141', status: 'ASSESSING', monsterId: 'goblin', locationId: 'fox-hollow', description: 'Magic reserves dropping faster than expected', timestamp: '2026-11-10T11:05:00Z', danger: 1, reward: 60 },

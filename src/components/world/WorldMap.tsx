@@ -77,8 +77,6 @@ export function WorldMap({
   const [spotAt, setSpotAt] = useState<string | null>(null)
   /** A monster we just reported: open its quest once it is on the map. */
   const [justSpotted, setJustSpotted] = useState<string | null>(null)
-  /** Scouting quest whose investigate form is open. */
-  const [investigate, setInvestigate] = useState<string | null>(null)
   /** Which quest ranks (location danger 1–5) are shown. */
   const [ranks, setRanks] = useState<number[]>([1, 2, 3, 4, 5])
   const [selectedGlitch, setSelectedGlitch] = useState<string | null>(null)
@@ -345,7 +343,6 @@ export function WorldMap({
   const selected = glitches.find((g) => g.glitchId === selectedGlitch) ?? null
   const selectedLoc = selectedLocation ? (locationById.get(selectedLocation) ?? null) : null
   const spotLoc = spotAt ? (locationById.get(spotAt) ?? null) : null
-  const investigating = investigate ? (glitches.find((g) => g.glitchId === investigate && !g.monsterId) ?? null) : null
   const manage = can(me, PERMISSIONS.locationManage)
   const spot = can(me, PERMISSIONS.echoCreate)
   const clickArea = manage || spot
@@ -396,7 +393,6 @@ export function WorldMap({
     b.x += b.w * 0.17
     setSelectedLocation(null)
     setSpotAt(null)
-    setInvestigate(null)
     setSelectedGlitch(g.glitchId)
     setRegion(g.regionId)
     flyTo(b)
@@ -717,10 +713,6 @@ export function WorldMap({
             guardians={guardians}
             onClose={() => setSelectedGlitch(null)}
             onChanged={onChanged}
-            onInvestigate={() => {
-              setInvestigate(selected.glitchId)
-              setSelectedGlitch(null)
-            }}
           />
         </div>
       )}
@@ -735,24 +727,6 @@ export function WorldMap({
               setSelectedLocation(null)
               setSpotAt(selectedLoc.locationId)
             } : undefined}
-          />
-        </div>
-      )}
-      {investigating && (
-        <div data-panel>
-          <SpotPanel
-            key={investigating.glitchId}
-            location={locationById.get(investigating.locationId)!}
-            regionName={investigating.regionName}
-            monsters={monsters}
-            investigate={investigating}
-            onClose={() => setInvestigate(null)}
-            onSpotted={async (glitchId) => {
-              await onChanged()
-              setInvestigate(null)
-              focused.current = null
-              setJustSpotted(glitchId)
-            }}
           />
         </div>
       )}

@@ -68,7 +68,7 @@ export type GlitchListItem = Glitch & {
   locationDanger: number
   /** Gold per party member: what the guild master set, else the location's default. */
   reward: number
-  /** The guild master has set rank & reward: adventurers can accept. */
+  /** The guild master has set the reward: adventurers can accept. */
   rated: boolean
   echoCount: number
   /** Of which reported by villagers. */

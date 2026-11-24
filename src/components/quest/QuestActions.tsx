@@ -1,7 +1,6 @@
-import { Link } from '@tanstack/react-router'
 import { Hourglass, Search, Swords, Trophy } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { FightDialog } from '#/components/quest/FightDialog.tsx'
+import { openQuestDialog } from '#/components/quest/QuestDialogHost.tsx'
 import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
 import { questRank, questStage, type GlitchListItem } from '#/lib/glitch.ts'
 import { rateQuest, setQuestAccepted } from '#/lib/glitches.functions.ts'
@@ -11,24 +10,20 @@ const primary =
 
 /**
  * What you can do with a quest right now, by stage:
- * scouting → investigate · spotted → guild master sets rank & reward · open → accept ·
+ * scouting → investigate (match the silhouette) · spotted → guild master sets the reward · open → accept ·
  * engaged → fight (party) · slain → done.
  */
 export function QuestActions({
   glitch,
   me,
   onChanged,
-  onInvestigate,
 }: {
   glitch: GlitchListItem
   me: SessionGuardian
   onChanged: () => Promise<void> | void
-  /** Open the investigate form; without it, the button links to the quest on the map. */
-  onInvestigate?: () => void
 }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [fighting, setFighting] = useState(false)
   const stage = questStage(glitch)
   const adventurer = can(me, PERMISSIONS.questAccept)
   const guildMaster = can(me, PERMISSIONS.locationManage)
@@ -52,15 +47,9 @@ export function QuestActions({
     <div className="flex flex-col gap-2">
       {stage === 'scouting' &&
         (adventurer ? (
-          onInvestigate ? (
-            <button type="button" onClick={onInvestigate} className={`${primary} bg-[#101D38] text-[#FAF7EF] hover:bg-[#1c2c52]`}>
-              <Search className="size-4" /> Investigate · +25 gold
-            </button>
-          ) : (
-            <Link to="/" search={{ quest: glitch.glitchId }} className={`${primary} bg-[#101D38] text-[#FAF7EF] hover:bg-[#1c2c52]`}>
-              <Search className="size-4" /> Investigate on the map
-            </Link>
-          )
+          <button type="button" onClick={() => openQuestDialog('scout', glitch)} className={`${primary} bg-[#101D38] text-[#FAF7EF] hover:bg-[#1c2c52]`}>
+            <Search className="size-4" /> Investigate · +25 gold
+          </button>
         ) : (
           <Note>Waiting for an adventurer to find out which monster is behind the villagers' reports.</Note>
         ))}
@@ -69,7 +58,7 @@ export function QuestActions({
         (guildMaster ? (
           <RateForm glitch={glitch} onChanged={onChanged} />
         ) : (
-          <Note>The guild master is setting the rank and reward of this quest…</Note>
+          <Note>The guild master is setting the reward of this quest…</Note>
         ))}
 
       {(stage === 'open' || stage === 'fighting') && adventurer && (
@@ -77,7 +66,7 @@ export function QuestActions({
           {onQuest && stage === 'fighting' && (
             <button
               type="button"
-              onClick={() => setFighting(true)}
+              onClick={() => openQuestDialog('fight', glitch)}
               className={`${primary} bg-[#B3263E] py-2.5 text-white shadow-[0_2px_0_#7a1526] hover:bg-[#9a1f35]`}
             >
               <Swords className="size-4" /> Fight the {glitch.monsterName}
@@ -111,7 +100,6 @@ export function QuestActions({
         </p>
       )}
 
-      {fighting && <FightDialog glitch={glitch} onClose={() => setFighting(false)} onSlain={onChanged} />}
     </div>
   )
 }
@@ -124,9 +112,8 @@ function Note({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** Guild master: rank (D..S) and reward for a Spotted quest; then adventurers can accept it. */
+/** Guild master: the reward for a Spotted quest (its rank follows the monster); then adventurers can accept it. */
 export function RateForm({ glitch, onChanged }: { glitch: GlitchListItem; onChanged: () => Promise<void> | void }) {
-  const [danger, setDanger] = useState(glitch.locationDanger)
   const [reward, setReward] = useState(glitch.reward)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -136,7 +123,7 @@ export function RateForm({ glitch, onChanged }: { glitch: GlitchListItem; onChan
     setPending(true)
     setError(null)
     try {
-      await rateQuest({ data: { glitchId: glitch.glitchId, danger, reward } })
+      await rateQuest({ data: { glitchId: glitch.glitchId, reward } })
       await onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save')
@@ -147,23 +134,12 @@ export function RateForm({ glitch, onChanged }: { glitch: GlitchListItem; onChan
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-2 rounded-md border border-[#C9A24B]/60 bg-white p-3 text-[#101D38]">
-      <p className="text-sm font-bold">Set rank & reward</p>
-      <div className="flex gap-1" role="radiogroup" aria-label="Quest rank">
-        {[1, 2, 3, 4, 5].map((d) => (
-          <button
-            key={d}
-            type="button"
-            role="radio"
-            aria-checked={danger === d}
-            onClick={() => setDanger(d)}
-            className={`flex-1 rounded-md border py-1.5 text-sm font-black ${
-              danger === d ? 'border-[#B3263E] bg-[#B3263E] text-white' : 'border-[#101D38]/20 hover:bg-[#101D38]/5'
-            }`}
-          >
-            {questRank(d)}
-          </button>
-        ))}
-      </div>
+      <p className="flex items-center justify-between gap-2 text-sm font-bold">
+        Set the reward
+        <span className="rounded-sm bg-[#101D38] px-2 py-0.5 text-xs text-[#E3C47A]" title="The rank follows the monster">
+          Rank {questRank(glitch.locationDanger)}
+        </span>
+      </p>
       <label className="flex items-center gap-2 text-sm">
         Reward
         <input

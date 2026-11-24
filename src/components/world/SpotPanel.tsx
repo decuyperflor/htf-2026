@@ -2,25 +2,22 @@ import { Eye, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { MonsterIcon } from '#/components/MonsterIcon.tsx'
 import { Button } from '#/components/ui/Button.tsx'
-import type { GlitchListItem, Location, Monster } from '#/lib/glitch.ts'
-import { investigateQuest, reportEcho } from '#/lib/glitches.functions.ts'
+import type { Location, Monster } from '#/lib/glitch.ts'
+import { reportEcho } from '#/lib/glitches.functions.ts'
 
 /**
- * Spot a monster right where you clicked on the map, or (with `investigate`) find out
- * which monster is behind a scouting quest's villager reports.
+ * Spot a monster right where you clicked on the map.
  */
 export function SpotPanel({
   location,
   regionName,
   monsters,
-  investigate,
   onClose,
   onSpotted,
 }: {
   location: Location
   regionName: string
   monsters: Monster[]
-  investigate?: GlitchListItem
   onClose: () => void
   onSpotted: (glitchId: string) => Promise<void> | void
 }) {
@@ -34,13 +31,8 @@ export function SpotPanel({
     setPending(true)
     setError(null)
     try {
-      if (investigate) {
-        await investigateQuest({ data: { glitchId: investigate.glitchId, monsterId, description } })
-        await onSpotted(investigate.glitchId)
-      } else {
-        const { glitchId } = await reportEcho({ data: { description, monsterId, locationId: location.locationId } })
-        await onSpotted(glitchId)
-      }
+      const { glitchId } = await reportEcho({ data: { description, monsterId, locationId: location.locationId } })
+      await onSpotted(glitchId)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not report the sighting')
       setPending(false)
@@ -53,7 +45,7 @@ export function SpotPanel({
         <div className="flex items-start justify-between gap-2">
           <div>
             <span className="text-xs font-bold tracking-widest text-[#8A6A2A] uppercase">
-              {investigate ? `Investigate · ${investigate.glitchId}` : 'Spot a monster'}
+              Spot a monster
             </span>
             <h3 className="text-lg leading-tight font-bold">{location.name}</h3>
             <p className="text-xs text-[#101D38]/60">{regionName}</p>
@@ -65,7 +57,7 @@ export function SpotPanel({
 
         <fieldset className="flex flex-col gap-1.5">
           <legend className="mb-1 text-sm font-semibold">
-            {investigate ? `${investigate.villagerReports} villagers reported trouble here. Which monster did you find?` : 'Which monster did you see?'}
+            Which monster did you see?
           </legend>
           <div className="grid grid-cols-3 gap-1.5">
             {monsters.map((m) => {
@@ -116,7 +108,7 @@ export function SpotPanel({
         )}
 
         <Button type="submit" disabled={pending || !description.trim()} className="mt-auto">
-          <Eye className="size-4" /> {pending ? 'Reporting…' : investigate ? 'Report what I found · +25 gold' : 'Report monster'}
+          <Eye className="size-4" /> {pending ? 'Reporting…' : 'Report monster'}
         </Button>
       </form>
     </aside>

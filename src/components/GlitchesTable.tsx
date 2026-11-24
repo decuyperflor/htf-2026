@@ -71,7 +71,7 @@ export function GlitchesTable({
                   <span className="block text-xs text-muted">{glitch.regionName}</span>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <span className="font-bold">{glitch.rated ? questRank(glitch.locationDanger) : '?'}</span>
+                  <span className="font-bold">{glitch.monsterId ? questRank(glitch.locationDanger) : '?'}</span>
                   <span className="ml-2 inline-flex items-center gap-0.5 text-xs font-semibold text-[#8A6A2A]">
                     <Coins className="size-3.5" /> {glitch.reward}
                   </span>
