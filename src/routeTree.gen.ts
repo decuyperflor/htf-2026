@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppBestiaryRouteImport } from './routes/_app/bestiary'
 import { Route as AppReportRouteImport } from './routes/_app/report'
 import { Route as AppGlitchesGlitchIdRouteImport } from './routes/_app/glitches.$glitchId'
 
@@ -29,6 +30,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBestiaryRoute = AppBestiaryRouteImport.update({
+  id: '/bestiary',
+  path: '/bestiary',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReportRoute = AppReportRouteImport.update({
   id: '/report',
   path: '/report',
@@ -43,11 +49,13 @@ const AppGlitchesGlitchIdRoute = AppGlitchesGlitchIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/bestiary': typeof AppBestiaryRoute
   '/report': typeof AppReportRoute
   '/glitches/$glitchId': typeof AppGlitchesGlitchIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/bestiary': typeof AppBestiaryRoute
   '/report': typeof AppReportRoute
   '/': typeof AppIndexRoute
   '/glitches/$glitchId': typeof AppGlitchesGlitchIdRoute
@@ -56,19 +64,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/bestiary': typeof AppBestiaryRoute
   '/_app/report': typeof AppReportRoute
   '/_app/': typeof AppIndexRoute
   '/_app/glitches/$glitchId': typeof AppGlitchesGlitchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/report' | '/glitches/$glitchId'
+  fullPaths: '/' | '/login' | '/bestiary' | '/report' | '/glitches/$glitchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/report' | '/' | '/glitches/$glitchId'
+  to: '/login' | '/bestiary' | '/report' | '/' | '/glitches/$glitchId'
   id:
     | '__root__'
     | '/_app'
     | '/login'
+    | '/_app/bestiary'
     | '/_app/report'
     | '/_app/'
     | '/_app/glitches/$glitchId'
@@ -102,6 +112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/bestiary': {
+      id: '/_app/bestiary'
+      path: '/bestiary'
+      fullPath: '/bestiary'
+      preLoaderRoute: typeof AppBestiaryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/report': {
       id: '/_app/report'
       path: '/report'
@@ -120,12 +137,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBestiaryRoute: typeof AppBestiaryRoute
   AppReportRoute: typeof AppReportRoute
   AppIndexRoute: typeof AppIndexRoute
   AppGlitchesGlitchIdRoute: typeof AppGlitchesGlitchIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBestiaryRoute: AppBestiaryRoute,
   AppReportRoute: AppReportRoute,
   AppIndexRoute: AppIndexRoute,
   AppGlitchesGlitchIdRoute: AppGlitchesGlitchIdRoute,

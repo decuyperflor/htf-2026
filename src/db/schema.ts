@@ -56,6 +56,17 @@ export const sessions = sqliteTable(
   (t) => [index('sessions_guardian_idx').on(t.guardianId)],
 )
 
+// ---------- Monster index (bestiary) ----------
+
+export const monsters = sqliteTable('monsters', {
+  /** e.g. 'slime'; also selects the sprite drawn on the battlefield. */
+  monsterId: text('monster_id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  /** 1 (harmless) .. 5 (deadly): base size of the monster. */
+  danger: integer('danger').notNull(),
+})
+
 // ---------- Glitches & echoes ----------
 
 export const glitches = sqliteTable('glitches', {
@@ -65,7 +76,31 @@ export const glitches = sqliteTable('glitches', {
   description: text('description').notNull(),
   /** ISO 8601, so lexical order is chronological order. */
   timestamp: text('timestamp').notNull(),
+  /** What kind of monster this glitch is. */
+  monsterId: text('monster_id')
+    .notNull()
+    .default('slime')
+    .references(() => monsters.monsterId),
 })
+
+/** Adventurers (defenders) the guild sent out to a monster. */
+export const glitchAssignments = sqliteTable(
+  'glitch_assignments',
+  {
+    glitchId: text('glitch_id')
+      .notNull()
+      .references(() => glitches.glitchId, { onDelete: 'cascade' }),
+    guardianId: integer('guardian_id')
+      .notNull()
+      .references(() => guardians.guardianId, { onDelete: 'cascade' }),
+    /** ISO 8601 */
+    assignedAt: text('assigned_at').notNull(),
+    assignedBy: integer('assigned_by')
+      .notNull()
+      .references(() => guardians.guardianId),
+  },
+  (t) => [primaryKey({ columns: [t.glitchId, t.guardianId] })],
+)
 
 export const echoes = sqliteTable(
   'echoes',

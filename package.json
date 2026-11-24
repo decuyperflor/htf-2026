@@ -13,6 +13,7 @@
     "db:push": "drizzle-kit push",
     "db:seed": "node src/db/seed.ts",
     "db:setup": "npm run db:push && npm run db:seed",
+    "db:reset": "node -e \"for (const f of ['local.db','local.db-wal','local.db-shm']) require('fs').rmSync(f,{force:true})\" && npm run db:setup",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

@@ -1,8 +1,10 @@
 import { db } from './index.ts'
 import {
   echoes,
+  glitchAssignments,
   glitches,
   guardians,
+  monsters,
   permissions,
   rolePermissions,
   roles,
@@ -11,17 +13,19 @@ import {
 import { hashPassword } from '../server/password.ts'
 
 // ---------- Roles & permissions ----------
+// Role ids stay 'defender'/'commander' (the assignment); the names follow the guild theme.
 
 const roleRows: (typeof roles.$inferInsert)[] = [
-  { roleId: 'defender', name: 'Defender' },
-  { roleId: 'commander', name: 'Commander' },
+  { roleId: 'defender', name: 'Adventurer' },
+  { roleId: 'commander', name: 'Guild master' },
 ]
 
 const permissionRows: (typeof permissions.$inferInsert)[] = [
-  { permissionId: 'glitch:view', description: 'See glitches and their echoes' },
-  { permissionId: 'echo:create', description: 'Report echoes' },
-  { permissionId: 'glitch:update_status', description: 'Change the status of a glitch' },
-  { permissionId: 'glitch:delete', description: 'Delete glitches' },
+  { permissionId: 'glitch:view', description: 'See monsters and their sightings' },
+  { permissionId: 'echo:create', description: 'Report sightings (echoes)' },
+  { permissionId: 'glitch:update_status', description: 'Change the status of a monster' },
+  { permissionId: 'glitch:assign', description: 'Send adventurers out to a monster' },
+  { permissionId: 'glitch:delete', description: 'Remove monsters' },
   { permissionId: 'guardian:manage', description: 'Manage guardians and their roles' },
 ]
 
@@ -30,8 +34,19 @@ const defenderPermissions = ['glitch:view', 'echo:create']
 const commanderPermissions = [
   ...defenderPermissions,
   'glitch:update_status',
+  'glitch:assign',
   'glitch:delete',
   'guardian:manage',
+]
+
+// ---------- Monster index ----------
+
+const monsterRows: (typeof monsters.$inferInsert)[] = [
+  { monsterId: 'slime', name: 'Glitch Slime', danger: 1, description: 'A wobbling blob of corrupted data. Mostly harmless, very sticky.' },
+  { monsterId: 'goblin', name: 'Byte Goblin', danger: 2, description: 'Steals seconds from clocks and hides them in its pockets.' },
+  { monsterId: 'wraith', name: 'Desync Wraith', danger: 3, description: 'A ghost out of step with time. Things it touches start to lag.' },
+  { monsterId: 'golem', name: 'Rune Golem', danger: 4, description: 'Animated by broken spells. Slow, heavy and very hard to stop.' },
+  { monsterId: 'dragon', name: 'Chrono Dragon', danger: 5, description: 'Breathes time loops. When it appears, all of Achrona is at risk.' },
 ]
 
 // ---------- Demo guardians (test accounts, local only) ----------
@@ -43,13 +58,13 @@ const guardianRows = [
   { codename: 'kael', roleId: 'defender' },
 ]
 
-// ---------- Glitches, each opened by its first echo ----------
+// ---------- Glitches (monsters), each opened by its first echo ----------
 
 const glitchRows: (typeof glitches.$inferInsert)[] = [
-  { glitchId: 'GL-0142', status: 'LEAKED', description: 'Time loop detected near the eastern clock tower', timestamp: '2026-11-10T13:42:00Z' },
-  { glitchId: 'GL-0141', status: 'ASSESSING', description: 'Magic reserves dropping faster than expected', timestamp: '2026-11-10T11:05:00Z' },
-  { glitchId: 'GL-0139', status: 'CONTAINING', description: 'Portal flicker in the archive vaults', timestamp: '2026-11-09T22:17:00Z' },
-  { glitchId: 'GL-0137', status: 'FIXED', description: 'Echo sensors reporting duplicate signals', timestamp: '2026-11-08T08:30:00Z' },
+  { glitchId: 'GL-0142', status: 'LEAKED', monsterId: 'wraith', description: 'Time loop detected near the eastern clock tower', timestamp: '2026-11-10T13:42:00Z' },
+  { glitchId: 'GL-0141', status: 'ASSESSING', monsterId: 'goblin', description: 'Magic reserves dropping faster than expected', timestamp: '2026-11-10T11:05:00Z' },
+  { glitchId: 'GL-0139', status: 'CONTAINING', monsterId: 'golem', description: 'Portal flicker in the archive vaults', timestamp: '2026-11-09T22:17:00Z' },
+  { glitchId: 'GL-0137', status: 'FIXED', monsterId: 'slime', description: 'Echo sensors reporting duplicate signals', timestamp: '2026-11-08T08:30:00Z' },
 ]
 
 // [glitchId, description, timestamp, reporter codename]
@@ -63,10 +78,15 @@ const echoRows: [string, string, string, string][] = [
   ['GL-0137', 'Sensors recalibrated, all signals normal again', '2026-11-08T15:12:00Z', 'nova'],
 ]
 
+// [glitchId, adventurer codename] — sent out by the guild master.
+const assignmentRows: [string, string][] = [['GL-0139', 'ember']]
+
 // Wipe and refill so the seed can be re-run safely (children first).
 db.transaction((tx) => {
+  tx.delete(glitchAssignments).run()
   tx.delete(echoes).run()
   tx.delete(glitches).run()
+  tx.delete(monsters).run()
   tx.delete(sessions).run()
   tx.delete(guardians).run()
   tx.delete(rolePermissions).run()
@@ -92,6 +112,7 @@ db.transaction((tx) => {
     idByCodename.set(g.codename, guardianId)
   }
 
+  tx.insert(monsters).values(monsterRows).run()
   tx.insert(glitches).values(glitchRows).run()
   tx.insert(echoes)
     .values(
@@ -103,10 +124,20 @@ db.transaction((tx) => {
       })),
     )
     .run()
+  tx.insert(glitchAssignments)
+    .values(
+      assignmentRows.map(([glitchId, codename]) => ({
+        glitchId,
+        guardianId: idByCodename.get(codename)!,
+        assignedAt: '2026-11-10T07:00:00Z',
+        assignedBy: idByCodename.get('nova')!,
+      })),
+    )
+    .run()
 })
 
 console.log(
-  `Seeded ${roleRows.length} roles, ${guardianRows.length} guardians, ` +
+  `Seeded ${roleRows.length} roles, ${guardianRows.length} guardians, ${monsterRows.length} monsters, ` +
     `${glitchRows.length} glitches, ${echoRows.length} echoes.`,
 )
 console.log(`Demo logins: ${guardianRows.map((g) => g.codename).join(', ')} / password "${DEMO_PASSWORD}"`)

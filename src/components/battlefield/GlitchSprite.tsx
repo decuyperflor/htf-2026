@@ -1,24 +1,27 @@
 import type { KeyboardEvent } from 'react'
+import { STATUS_LABELS } from '#/lib/glitch.ts'
 import type { GlitchSim, SoldierPos } from './Battlefield.tsx'
-import { gunTip } from './Soldier.tsx'
+import { MonsterBody } from './MonsterBody.tsx'
+import { staffTip } from './Soldier.tsx'
 import { SHOOT_MS, clamp01, easeOutBack, easeOutCubic, hash01 } from './geometry.ts'
 
 const SHARDS = 14
 
-/** Triangle pointing left (towards the defenders), centred on 0,0. */
-function triangle(r: number) {
+function shard(r: number) {
   return `${-r},0 ${r * 0.5},${-r * 0.87} ${r * 0.5},${r * 0.87}`
 }
 
+/** One monster (glitch) on the battlefield, with its phase effects. */
 export function GlitchSprite({
   sim,
   now,
-  soldiers,
+  attackers,
   onOpen,
 }: {
   sim: GlitchSim
   now: number
-  soldiers: SoldierPos[]
+  /** Adventurers attacking it (only while it is being slain). */
+  attackers: { soldier: SoldierPos; aim: { x: number; y: number } | null }[]
   onOpen: () => void
 }) {
   const seed = hash01(sim.id, 9) * 100
@@ -27,14 +30,14 @@ export function GlitchSprite({
   const exploding = dying !== null && dying >= SHOOT_MS
   const sinceStatus = now - sim.statusSince
 
-  // Glitchy jitter: mostly still, with short bursts. Caged glitches struggle harder.
+  // Glitchy jitter: mostly still, with short bursts. Caged monsters struggle harder.
   const burst = Math.sin(now / 260 + seed) > 0.8
   const struggle = sim.status === 'CONTAINING' ? 2.5 : 1
   const jx = burst ? Math.sin(now / 23 + seed) * 2.2 * struggle : 0
   const jy = burst ? Math.cos(now / 29 + seed) * 1.6 * struggle : 0
   const walkBob = sim.status === 'LEAKED' && dying === null ? Math.sin(now / 160 + seed) * 2 : 0
   const appear = easeOutBack(clamp01((now - sim.bornAt) / 600))
-  const hit = dying !== null && dying > SHOOT_MS * 0.5 && Math.floor(now / 50) % 2 === 0
+  const hit = dying !== null && dying > SHOOT_MS * 0.4 && Math.floor(now / 50) % 2 === 0
 
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -45,25 +48,24 @@ export function GlitchSprite({
 
   return (
     <g>
-      {/* Bullets from every soldier while it is being destroyed */}
+      {/* Magic bolts from the attacking adventurers */}
       {dying !== null &&
         !exploding &&
-        soldiers.map((s, i) => {
-          const { tx, ty } = gunTip(s, sim, now)
+        attackers.map(({ soldier, aim }, i) => {
+          const { tx, ty } = staffTip(soldier, aim, now)
           return [0, 1, 2].map((k) => {
             const p = ((dying / 220 + i * 0.27 + k / 3) % 1 + 1) % 1
-            const bx = tx + (sim.x - tx) * p
-            const by = ty + (sim.y - ty) * p
-            const back = 0.06
+            const back = 0.07
+            const color = soldier.roleId === 'commander' ? '#ffcf4d' : '#7df9ff'
             return (
               <line
-                key={`${s.guardianId}-${k}`}
+                key={`${soldier.guardianId}-${k}`}
                 x1={tx + (sim.x - tx) * Math.max(0, p - back)}
                 y1={ty + (sim.y - ty) * Math.max(0, p - back)}
-                x2={bx}
-                y2={by}
-                stroke="#fff3a3"
-                strokeWidth={3}
+                x2={tx + (sim.x - tx) * p}
+                y2={ty + (sim.y - ty) * p}
+                stroke={color}
+                strokeWidth={3.5}
                 strokeLinecap="round"
               />
             )
@@ -74,52 +76,48 @@ export function GlitchSprite({
         transform={`translate(${sim.x + jx} ${sim.y + jy + walkBob})`}
         role="button"
         tabIndex={0}
-        aria-label={`${sim.id}, ${sim.status}, ${sim.echoCount} echoes: ${sim.description}`}
+        aria-label={`${sim.id}, ${sim.monsterName}, ${STATUS_LABELS[sim.status]}, ${sim.echoCount} sightings: ${sim.description}`}
         onClick={onOpen}
         onKeyDown={onKey}
         className="cursor-pointer outline-none"
       >
-        <title>{`${sim.id} · ${sim.status} · ${sim.echoCount} echo(es)\n${sim.description}`}</title>
+        <title>{`${sim.id} · ${sim.monsterName} · ${STATUS_LABELS[sim.status]} · ${sim.echoCount} sighting(s)\n${sim.description}`}</title>
 
         {!exploding && (
           <g transform={`scale(${appear})`}>
-            {/* Chromatic aberration copies */}
-            <polygon points={triangle(r)} transform={`translate(${-2 - jx * 0.6} 0)`} fill="#ff2d75" opacity={0.55} />
-            <polygon points={triangle(r)} transform={`translate(${2 + jx * 0.6} 0)`} fill="#2de2ff" opacity={0.45} />
-            <polygon points={triangle(r)} fill={hit ? '#ffffff' : '#1a0b2e'} stroke="#ff4d8d" strokeWidth={2.5} />
-            <circle cx={r * 0.05} cy={0} r={Math.max(2.5, r * 0.14)} fill={hit ? '#ff2d75' : '#ff4d8d'} />
+            {/* Glitch aura: red/cyan offset outlines during bursts */}
             {burst && (
-              <rect x={-r} y={-r * 0.2 + jy * 2} width={r * 1.6} height={2} fill="#2de2ff" opacity={0.8} />
+              <>
+                <ellipse rx={r * 0.95} ry={r * 0.8} transform={`translate(${-3 - jx} 0)`} fill="none" stroke="#ff2d75" strokeWidth={2} opacity={0.6} />
+                <ellipse rx={r * 0.95} ry={r * 0.8} transform={`translate(${3 + jx} 0)`} fill="none" stroke="#2de2ff" strokeWidth={2} opacity={0.5} />
+              </>
             )}
+            <g opacity={hit ? 0.45 : 1}>
+              <MonsterBody monsterId={sim.monsterId} r={r} t={now + seed * 37} />
+            </g>
+            {hit && <circle r={r * 0.9} fill="#ffffff" opacity={0.35} />}
+            {burst && <rect x={-r} y={-r * 0.2 + jy * 2} width={r * 1.8} height={2} fill="#2de2ff" opacity={0.8} />}
           </g>
         )}
 
-        {/* ASSESSING: pulsing red ring */}
+        {/* ASSESSING (scouting): pulsing red ring */}
         {sim.status === 'ASSESSING' && dying === null && (
           <g>
             <circle
-              r={r * 1.7 + Math.sin(now / 180) * 3}
+              r={r * 1.5 + Math.sin(now / 180) * 3}
               fill="rgb(255 45 45 / 0.08)"
               stroke="#ff3b3b"
               strokeWidth={2.5}
               opacity={0.6 + Math.sin(now / 180) * 0.4}
             />
-            <circle
-              r={r * 2.1}
-              fill="none"
-              stroke="#ff3b3b"
-              strokeWidth={1.5}
-              strokeDasharray="4 10"
-              transform={`rotate(${(now / 20) % 360})`}
-              opacity={0.7}
-            />
+            <circle r={r * 1.9} fill="none" stroke="#ff3b3b" strokeWidth={1.5} strokeDasharray="4 10" transform={`rotate(${(now / 20) % 360})`} opacity={0.7} />
           </g>
         )}
 
-        {/* CONTAINING: a cage slams shut around it */}
+        {/* CONTAINING (engaged): a cage slams shut around it */}
         {sim.status === 'CONTAINING' && dying === null && (() => {
           const k = easeOutCubic(clamp01(sinceStatus / 600))
-          const side = r * 2.6 * (2 - k)
+          const side = r * 2.5 * (2 - k)
           const bars = 4
           return (
             <g opacity={k}>
@@ -132,7 +130,7 @@ export function GlitchSprite({
           )
         })()}
 
-        {/* FIXED: explosion */}
+        {/* FIXED (slain): explosion */}
         {exploding && (() => {
           const t = clamp01((dying - SHOOT_MS) / 1000)
           const e = easeOutCubic(t)
@@ -147,7 +145,7 @@ export function GlitchSprite({
                 return (
                   <polygon
                     key={i}
-                    points={triangle(s)}
+                    points={shard(s)}
                     transform={`translate(${Math.cos(a) * dist} ${Math.sin(a) * dist}) rotate(${t * 540 + i * 40})`}
                     fill={i % 2 ? '#ff4d8d' : '#2de2ff'}
                     opacity={1 - t}
@@ -159,7 +157,7 @@ export function GlitchSprite({
         })()}
 
         {!exploding && (
-          <text y={r * 2.2 + 12} textAnchor="middle" fontSize="11" fill="rgb(255 255 255 / 0.7)">
+          <text y={r * 1.9 + 14} textAnchor="middle" fontSize="11" fill="rgb(255 255 255 / 0.7)">
             {sim.id}
           </text>
         )}

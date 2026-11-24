@@ -8,9 +8,12 @@ export const SHOOT_MS = 900
 /** Total time from FIXED until the glitch is gone (shooting + explosion). */
 export const DEATH_MS = 1900
 
-/** Danger = number of echoes: 1 echo is small, 7+ echoes is huge. */
-export function sizeFor(echoCount: number) {
-  return 14 + 6 * Math.min(Math.max(echoCount, 1) - 1, 6)
+/**
+ * Size of a monster: its type's danger (1..5) sets the base, every extra
+ * sighting (echo) makes it grow, up to 7 echoes.
+ */
+export function sizeFor(echoCount: number, danger: number) {
+  return 10 + 4 * danger + 5 * Math.min(Math.max(echoCount, 1) - 1, 6)
 }
 
 /** Deterministic 0..1 value per (id, salt), so positions survive reloads. */

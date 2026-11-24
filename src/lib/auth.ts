@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   glitchView: 'glitch:view',
   echoCreate: 'echo:create',
   glitchUpdateStatus: 'glitch:update_status',
+  glitchAssign: 'glitch:assign',
   glitchDelete: 'glitch:delete',
   guardianManage: 'guardian:manage',
 } as const

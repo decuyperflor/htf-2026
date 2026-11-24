@@ -1,19 +1,20 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Activity, LayoutGrid, LogOut, Plus, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpen, Castle, Eye, LogOut, type LucideIcon } from 'lucide-react'
 import { PERMISSIONS, can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
 import { logout } from '#/lib/auth.functions.ts'
 
 type NavItem = {
   label: string
   icon: LucideIcon
-  to: '/' | '/report'
+  to: '/' | '/report' | '/bestiary'
   /** Only shown when the guardian has this permission. */
   permission?: Permission
 }
 
 const navItems: NavItem[] = [
-  { label: 'Overview', icon: LayoutGrid, to: '/' },
-  { label: 'Report echo', icon: Plus, to: '/report', permission: PERMISSIONS.echoCreate },
+  { label: 'Guild hall', icon: Castle, to: '/' },
+  { label: 'Spot a monster', icon: Eye, to: '/report', permission: PERMISSIONS.echoCreate },
+  { label: 'Bestiary', icon: BookOpen, to: '/bestiary' },
 ]
 
 // Icon-only items: the label lives in aria-label/title for screen readers and hover.

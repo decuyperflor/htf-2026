@@ -1,27 +1,34 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Swords, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { EchoForm } from '#/components/EchoForm.tsx'
+import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
 import { StatusBadge } from '#/components/StatusBadge.tsx'
 import { Button } from '#/components/ui/Button.tsx'
 import { Card } from '#/components/ui/Card.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { formatTimestamp } from '#/lib/format.ts'
-import { GLITCH_STATUSES, type GlitchStatus } from '#/lib/glitch.ts'
-import { deleteGlitch, getGlitch, updateGlitchStatus } from '#/lib/glitches.functions.ts'
+import { GLITCH_STATUSES, STATUS_LABELS, type GlitchStatus } from '#/lib/glitch.ts'
+import {
+  assignAdventurers,
+  deleteGlitch,
+  getGlitch,
+  updateGlitchStatus,
+} from '#/lib/glitches.functions.ts'
+import { getGuardians } from '#/lib/guardians.functions.ts'
 
 export const Route = createFileRoute('/_app/glitches/$glitchId')({
   loader: async ({ params }) => {
-    const glitch = await getGlitch({ data: params.glitchId })
+    const [glitch, guardians] = await Promise.all([getGlitch({ data: params.glitchId }), getGuardians()])
     if (!glitch) throw notFound()
-    return glitch
+    return { glitch, guardians }
   },
-  head: ({ params }) => ({ meta: [{ title: `${params.glitchId} · Control Center` }] }),
+  head: ({ params }) => ({ meta: [{ title: `${params.glitchId} · Achrona Guild` }] }),
   notFoundComponent: () => (
     <div className="flex flex-col gap-4">
-      <p className="text-fg">This glitch doesn't exist (anymore).</p>
+      <p className="text-fg">This monster isn't on the frontier (anymore).</p>
       <Link to="/" className="text-accent hover:underline">
-        Back to overview
+        Back to the guild hall
       </Link>
     </div>
   ),
@@ -29,7 +36,7 @@ export const Route = createFileRoute('/_app/glitches/$glitchId')({
 })
 
 function GlitchPage() {
-  const glitch = Route.useLoaderData()
+  const { glitch, guardians } = Route.useLoaderData()
   const { guardian } = Route.useRouteContext()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -45,39 +52,51 @@ function GlitchPage() {
   }
 
   async function remove() {
-    if (!confirm(`Delete ${glitch.glitchId} and all its echoes?`)) return
+    if (!confirm(`Remove ${glitch.glitchId} and all its sightings?`)) return
     try {
       await deleteGlitch({ data: glitch.glitchId })
       await router.navigate({ to: '/' })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete glitch')
+      setError(err instanceof Error ? err.message : 'Could not remove monster')
     }
   }
+
+  const canStatus = can(guardian, PERMISSIONS.glitchUpdateStatus)
+  const canAssign = can(guardian, PERMISSIONS.glitchAssign)
+  const canDelete = can(guardian, PERMISSIONS.glitchDelete)
 
   return (
     <div className="flex max-w-3xl flex-col gap-8">
       <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
-        <ArrowLeft className="size-4" /> Overview
+        <ArrowLeft className="size-4" /> Guild hall
       </Link>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold text-fg">{glitch.glitchId}</h1>
-          <StatusBadge status={glitch.status} />
+      <div className="flex flex-wrap items-start gap-5">
+        <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-[#120c2e]">
+          <MonsterIcon monsterId={glitch.monsterId} className="size-20" />
         </div>
-        <p className="text-lg text-fg">{glitch.description}</p>
-        <p className="text-sm text-muted">
-          Leaked on{' '}
-          <time dateTime={glitch.timestamp} suppressHydrationWarning>
-            {formatTimestamp(glitch.timestamp)}
-          </time>
-        </p>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-semibold text-fg">{glitch.glitchId}</h1>
+            <StatusBadge status={glitch.status} />
+          </div>
+          <p className="flex items-center gap-2 text-fg">
+            <span className="font-medium">{glitch.monsterName}</span>
+            <DangerStars danger={glitch.danger} />
+          </p>
+          <p className="text-lg text-fg">{glitch.description}</p>
+          <p className="text-sm text-muted">
+            Spotted on{' '}
+            <time dateTime={glitch.timestamp} suppressHydrationWarning>
+              {formatTimestamp(glitch.timestamp)}
+            </time>
+          </p>
+        </div>
       </div>
 
-      {(can(guardian, PERMISSIONS.glitchUpdateStatus) ||
-        can(guardian, PERMISSIONS.glitchDelete)) && (
+      {(canStatus || canDelete) && (
         <Card className="flex flex-wrap items-end justify-between gap-4 p-5">
-          {can(guardian, PERMISSIONS.glitchUpdateStatus) && (
+          {canStatus && (
             <label className="flex flex-col gap-1.5 text-sm text-fg">
               Status
               <select
@@ -87,15 +106,15 @@ function GlitchPage() {
               >
                 {GLITCH_STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {STATUS_LABELS[s]} ({s})
                   </option>
                 ))}
               </select>
             </label>
           )}
-          {can(guardian, PERMISSIONS.glitchDelete) && (
+          {canDelete && (
             <Button variant="danger" onClick={remove}>
-              <Trash2 className="size-4" /> Delete glitch
+              <Trash2 className="size-4" /> Remove monster
             </Button>
           )}
         </Card>
@@ -107,8 +126,24 @@ function GlitchPage() {
         </p>
       )}
 
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold text-fg">Adventurers sent out</h2>
+        {canAssign ? (
+          <AssignPanel
+            glitchId={glitch.glitchId}
+            adventurers={guardians.filter((g) => g.roleId === 'defender')}
+            assigned={glitch.assignments.map((a) => a.guardianId)}
+            onError={setError}
+          />
+        ) : glitch.assignments.length ? (
+          <p className="text-fg">{glitch.assignments.map((a) => a.codename).join(', ')}</p>
+        ) : (
+          <p className="text-muted">The guild hasn't sent anyone yet.</p>
+        )}
+      </section>
+
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold text-fg">Echoes ({glitch.echoes.length})</h2>
+        <h2 className="text-xl font-semibold text-fg">Sightings ({glitch.echoes.length})</h2>
         <ol className="flex flex-col gap-3">
           {glitch.echoes.map((echo) => (
             <li key={echo.echoId} className="rounded-xl border border-line p-4">
@@ -126,14 +161,85 @@ function GlitchPage() {
 
       {can(guardian, PERMISSIONS.echoCreate) && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-semibold text-fg">Add an echo to this glitch</h2>
+          <h2 className="text-xl font-semibold text-fg">Report another sighting</h2>
+          <p className="-mt-2 text-sm text-muted">Every sighting makes the monster grow on the frontier.</p>
           <EchoForm
             glitchId={glitch.glitchId}
-            submitLabel="Add echo"
+            submitLabel="Add sighting"
             onReported={() => router.invalidate()}
           />
         </section>
       )}
     </div>
+  )
+}
+
+function AssignPanel({
+  glitchId,
+  adventurers,
+  assigned,
+  onError,
+}: {
+  glitchId: string
+  adventurers: { guardianId: number; codename: string }[]
+  assigned: number[]
+  onError: (message: string | null) => void
+}) {
+  const router = useRouter()
+  const [selected, setSelected] = useState<number[]>(assigned)
+  const [pending, setPending] = useState(false)
+  // Follow the server after a save or when someone else changed it.
+  const assignedKey = [...assigned].sort().join(',')
+  useEffect(() => setSelected(assigned), [assignedKey])
+
+  const dirty = [...selected].sort().join(',') !== assignedKey
+
+  async function save() {
+    setPending(true)
+    onError(null)
+    try {
+      await assignAdventurers({ data: { glitchId, guardianIds: selected } })
+      await router.invalidate()
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Could not send adventurers')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  if (adventurers.length === 0) return <p className="text-muted">There are no adventurers in the guild.</p>
+
+  return (
+    <Card className="flex flex-col gap-4 p-5">
+      <div className="flex flex-wrap gap-2">
+        {adventurers.map((a) => {
+          const on = selected.includes(a.guardianId)
+          return (
+            <label
+              key={a.guardianId}
+              className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-accent ${
+                on ? 'border-accent bg-accent/10 text-fg' : 'border-line text-muted hover:bg-subtle'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={on}
+                onChange={() =>
+                  setSelected((s) => (on ? s.filter((id) => id !== a.guardianId) : [...s, a.guardianId]))
+                }
+                className="accent-accent"
+              />
+              {a.codename}
+            </label>
+          )
+        })}
+      </div>
+      <div>
+        <Button onClick={save} disabled={pending || !dirty}>
+          <Swords className="size-4" />
+          {pending ? 'Sending…' : 'Send out'}
+        </Button>
+      </div>
+    </Card>
   )
 }

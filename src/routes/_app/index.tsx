@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Eye } from 'lucide-react'
 import { useEffect } from 'react'
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
 import { Battlefield } from '#/components/battlefield/Battlefield.tsx'
@@ -28,7 +28,7 @@ function ReconnectingNotice() {
   }, [router])
   return (
     <div className="flex h-[42vh] min-h-[300px] items-center justify-center rounded-3xl bg-[#120c2e] text-white/70">
-      Connection to mission control lost – reconnecting…
+      Lost contact with the guild hall – reconnecting…
     </div>
   )
 }
@@ -54,18 +54,18 @@ function DashboardPage() {
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-fg">Manage glitches</h2>
+          <h2 className="text-2xl font-semibold text-fg">Quest board</h2>
           {can(guardian, PERMISSIONS.echoCreate) && (
             <Link
               to="/report"
               className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
             >
-              <Plus className="size-4" />
-              Report echo
+              <Eye className="size-4" />
+              Spot a monster
             </Link>
           )}
         </div>
-        <GlitchesTable glitches={glitches} />
+        <GlitchesTable glitches={glitches} guardians={guardians} />
       </section>
     </div>
   )

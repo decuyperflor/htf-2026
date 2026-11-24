@@ -1,20 +1,20 @@
-import { GLITCH_STATUSES, type GlitchListItem, type GlitchStatus } from '#/lib/glitch.ts'
+import { GLITCH_STATUSES, STATUS_LABELS, type GlitchListItem, type GlitchStatus } from '#/lib/glitch.ts'
 
-const legend: Record<GlitchStatus, { label: string; icon: React.ReactNode }> = {
+const legend: Record<GlitchStatus, { hint: string; icon: React.ReactNode }> = {
   LEAKED: {
-    label: 'Leaked – on the move',
-    icon: <polygon points="2,8 12,2 12,14" fill="#1a0b2e" stroke="#ff4d8d" strokeWidth={1.5} />,
+    hint: 'roaming',
+    icon: <path d="M2 12 Q2 3 8 3 Q14 3 14 12 Z" fill="#5ee38a" />,
   },
   ASSESSING: {
-    label: 'Assessing – targeted',
+    hint: 'being scouted',
     icon: <circle cx={8} cy={8} r={6} fill="none" stroke="#ff3b3b" strokeWidth={1.5} />,
   },
   CONTAINING: {
-    label: 'Containing – caged',
+    hint: 'adventurers engaged',
     icon: <rect x={2} y={2} width={12} height={12} rx={1.5} fill="none" stroke="#2de2ff" strokeWidth={1.5} />,
   },
   FIXED: {
-    label: 'Fixed – destroyed',
+    hint: 'defeated',
     icon: <circle cx={8} cy={8} r={6} fill="#ffb547" />,
   },
 }
@@ -32,9 +32,9 @@ export function BattlefieldHud({ glitches }: { glitches: GlitchListItem[] }) {
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-400 opacity-75" />
           <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
         </span>
-        <h1 className="text-sm font-semibold tracking-[0.2em] text-white/90 uppercase">Battlefield</h1>
+        <h1 className="text-sm font-semibold tracking-[0.2em] text-white/90 uppercase">Achrona frontier</h1>
         <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-white/80">
-          {active} active
+          {active} {active === 1 ? 'monster' : 'monsters'} at large
         </span>
       </div>
 
@@ -44,7 +44,9 @@ export function BattlefieldHud({ glitches }: { glitches: GlitchListItem[] }) {
             <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true">
               {legend[s].icon}
             </svg>
-            <span className="flex-1">{legend[s].label}</span>
+            <span className="flex-1">
+              {STATUS_LABELS[s]} <span className="text-white/50">– {legend[s].hint}</span>
+            </span>
             <span className="tabular-nums text-white/60">{counts[s]}</span>
           </li>
         ))}

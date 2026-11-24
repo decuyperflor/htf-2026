@@ -22,19 +22,34 @@ npm run dev
 ```
 
 Pas je `src/db/schema.ts` aan? Draai dan opnieuw `npm run db:setup` (wist en vult de database opnieuw).
+Faalt dat (bv. na een grote schemawijziging), gebruik dan **`npm run db:reset`**: verwijdert `local.db` en maakt alles opnieuw aan. Stop eerst de dev server.
 
 ### Demo-accounts (lokaal)
 | Codename | Rol | Wachtwoord |
 |---|---|---|
-| `nova` | commander | `achrona` |
-| `ember` | defender | `achrona` |
-| `kael` | defender | `achrona` |
+| `nova` | commander (Guild master) | `achrona` |
+| `ember` | defender (Adventurer) | `achrona` |
+| `kael` | defender (Adventurer) | `achrona` |
 
-### Datamodel (basis)
+### Thema: de guild van Achrona
+In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-thema.
+
+| Code | UI |
+|---|---|
+| glitch | monster |
+| echo | sighting (observatie) |
+| commander | guild master |
+| defender | adventurer |
+| `LEAKED` / `ASSESSING` / `CONTAINING` / `FIXED` | Spotted / Scouting / Engaged / Slain |
+
+### Datamodel
 - `guardians` → `role_id` → `roles`; rechten per rol via `role_permissions` → `permissions`
 - `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token)
-- `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)
-- Een nieuwe echo zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `LEAKED`)
+- `monsters`: de monster-index (bestiarium), met `danger` 1–5
+- `glitches` → `monster_id`; `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)
+- `glitch_assignments`: welke adventurers de guild naar een monster stuurt
+- Een nieuwe echo zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `LEAKED`) van het gekozen monstertype
+- Grootte op het slagveld = `danger` van het monstertype + groei per extra echo
 ## Beoordeling
 > Hoe wij beoordelen wordt voor de start van de hackathon met alle studenten gedeeld, zodat dit meteen duidelijk is voor iedereen.
 

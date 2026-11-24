@@ -8,7 +8,7 @@ export const Route = createFileRoute('/login')({
   beforeLoad: ({ context }) => {
     if (context.guardian) throw redirect({ to: '/' })
   },
-  head: () => ({ meta: [{ title: 'Login · Control Center' }] }),
+  head: () => ({ meta: [{ title: 'Login · Achrona Guild' }] }),
   component: LoginPage,
 })
 
@@ -50,7 +50,7 @@ function LoginPage() {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-fg">Guardians of the Grid</h1>
-            <p className="text-sm text-muted">Log in to mission control</p>
+            <p className="text-sm text-muted">Enter the guild hall of Achrona</p>
           </div>
         </div>
 
