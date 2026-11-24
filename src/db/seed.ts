@@ -103,21 +103,33 @@ const guardianRows = [
   { codename: 'kael', roleId: 'defender' },
 ]
 
-// ---------- Glitches (monsters), each opened by its first echo ----------
+// ---------- Glitches (quests), one per step of the workflow ----------
+// Scouting (villagers report, monster unknown) → Spotted (identified; the guild master sets
+// rank & reward) → Engaged (party fighting) → Slain.
 
 const glitchRows: (typeof glitches.$inferInsert)[] = [
-  { glitchId: 'GL-0142', status: 'LEAKED', monsterId: 'wraith', locationId: 'witch-hut', description: 'Time loop detected near the eastern clock tower', timestamp: '2026-11-10T13:42:00Z' },
-  { glitchId: 'GL-0141', status: 'ASSESSING', monsterId: 'goblin', locationId: 'fox-hollow', description: 'Magic reserves dropping faster than expected', timestamp: '2026-11-10T11:05:00Z' },
-  { glitchId: 'GL-0139', status: 'CONTAINING', monsterId: 'golem', locationId: 'buried-temple', description: 'Portal flicker in the archive vaults', timestamp: '2026-11-09T22:17:00Z' },
-  { glitchId: 'GL-0137', status: 'FIXED', monsterId: 'slime', locationId: 'old-pier', description: 'Echo sensors reporting duplicate signals', timestamp: '2026-11-08T08:30:00Z', slainAt: '2026-11-08T15:12:00Z' },
-  { glitchId: 'GL-0136', status: 'FIXED', monsterId: 'goblin', locationId: 'mushroom-ring', description: 'Mushrooms in the fairy ring keep resetting to yesterday', timestamp: '2026-11-07T10:20:00Z', slainAt: '2026-11-07T16:45:00Z' },
-  { glitchId: 'GL-0135', status: 'FIXED', monsterId: 'wraith', locationId: 'waterfall-cave', description: 'The waterfall flows upwards every full hour', timestamp: '2026-11-06T21:03:00Z', slainAt: '2026-11-07T09:30:00Z' },
-  { glitchId: 'GL-0143', status: 'LEAKED', monsterId: 'dragon', locationId: 'crater-rim', description: 'The volcano erupts every hour on the hour, backwards', timestamp: '2026-11-10T14:05:00Z' },
-  { glitchId: 'GL-0144', status: 'LEAKED', monsterId: 'slime', locationId: 'lily-isle', description: 'Lily pads keep teleporting one metre to the left', timestamp: '2026-11-10T14:20:00Z' },
+  // Scouting: villagers keep reporting trouble at Firefly Hollow; nobody has investigated yet.
+  { glitchId: 'GL-0145', status: 'LEAKED', monsterId: null, locationId: 'firefly-hollow', description: 'Villagers report strange things at Firefly Hollow: “A child went missing near Firefly Hollow this morning”', timestamp: '2026-11-10T14:30:00Z' },
+  // Spotted, waiting for the guild master's rank & reward.
+  { glitchId: 'GL-0144', status: 'ASSESSING', monsterId: 'slime', locationId: 'lily-isle', description: 'Lily pads keep teleporting one metre to the left', timestamp: '2026-11-10T14:20:00Z' },
+  // Spotted and posted: open for adventurers (the dragon also triggers lockdown).
+  { glitchId: 'GL-0143', status: 'ASSESSING', monsterId: 'dragon', locationId: 'crater-rim', description: 'The volcano erupts every hour on the hour, backwards', timestamp: '2026-11-10T14:05:00Z', danger: 5, reward: 800 },
+  { glitchId: 'GL-0141', status: 'ASSESSING', monsterId: 'goblin', locationId: 'fox-hollow', description: 'Magic reserves dropping faster than expected', timestamp: '2026-11-10T11:05:00Z', danger: 1, reward: 60 },
+  // Engaged: a party is on it (kael is offline, so he sleeps next to the wraith).
+  { glitchId: 'GL-0142', status: 'CONTAINING', monsterId: 'wraith', locationId: 'witch-hut', description: 'Time loop detected near the eastern clock tower', timestamp: '2026-11-10T13:42:00Z', danger: 4, reward: 450 },
+  { glitchId: 'GL-0139', status: 'CONTAINING', monsterId: 'golem', locationId: 'buried-temple', description: 'Portal flicker in the archive vaults', timestamp: '2026-11-09T22:17:00Z', danger: 4, reward: 520 },
+  // Slain.
+  { glitchId: 'GL-0137', status: 'FIXED', monsterId: 'slime', locationId: 'old-pier', description: 'Echo sensors reporting duplicate signals', timestamp: '2026-11-08T08:30:00Z', slainAt: '2026-11-08T15:12:00Z', danger: 1, reward: 50 },
+  { glitchId: 'GL-0136', status: 'FIXED', monsterId: 'goblin', locationId: 'mushroom-ring', description: 'Mushrooms in the fairy ring keep resetting to yesterday', timestamp: '2026-11-07T10:20:00Z', slainAt: '2026-11-07T16:45:00Z', danger: 1, reward: 70 },
+  { glitchId: 'GL-0135', status: 'FIXED', monsterId: 'wraith', locationId: 'waterfall-cave', description: 'The waterfall flows upwards every full hour', timestamp: '2026-11-06T21:03:00Z', slainAt: '2026-11-07T09:30:00Z', danger: 3, reward: 220 },
 ]
 
-// [glitchId, description, timestamp, reporter codename]
+// [glitchId, description, timestamp, reporter]: a guardian's codename, or a villager ('villager:Name').
 const echoRows: [string, string, string, string][] = [
+  ['GL-0145', 'A child went missing near Firefly Hollow this morning', '2026-11-10T14:24:00Z', 'villager:Granny Willow'],
+  ['GL-0145', 'Green lights dance around Firefly Hollow at night', '2026-11-10T14:27:00Z', 'villager:Farmer Odo'],
+  ['GL-0145', 'Something big growled under Firefly Hollow', '2026-11-10T14:30:00Z', 'villager:Little Pip'],
+  ['GL-0142', 'Every clock at Witch\'s Hut runs backwards', '2026-11-10T13:35:00Z', 'villager:Sister Elowen'],
   ['GL-0142', 'Time loop detected near the eastern clock tower', '2026-11-10T13:42:00Z', 'ember'],
   ['GL-0142', 'Same bell has rung 12 times in the last minute', '2026-11-10T13:47:00Z', 'kael'],
   ['GL-0141', 'Magic reserves dropping faster than expected', '2026-11-10T11:05:00Z', 'kael'],
@@ -134,6 +146,13 @@ const echoRows: [string, string, string, string][] = [
   ['GL-0143', 'Smoke is flowing back into the crater', '2026-11-10T14:09:00Z', 'ember'],
   ['GL-0143', 'Lava froze mid-air above the rim', '2026-11-10T14:12:00Z', 'kael'],
   ['GL-0144', 'Lily pads keep teleporting one metre to the left', '2026-11-10T14:20:00Z', 'ember'],
+]
+
+/** Loose villager reports (no quest yet): one more at Moss Ruins and a scouting quest opens. */
+const looseReports: [string, string, string][] = [
+  ['moss-ruins', 'Footprints at Moss Ruins that walk away from nowhere', 'Hob the shepherd'],
+  ['moss-ruins', 'Sheep near Moss Ruins keep vanishing one by one', 'Nell the milkmaid'],
+  ['oasis', 'Rain at Oasis falls upwards', 'Wren the courier'],
 ]
 
 // [glitchId, adventurer codename] — sent out by the guild master.
@@ -192,13 +211,30 @@ db.transaction((tx) => {
   tx.insert(regions).values(regionRows).run()
   tx.insert(locations).values(locationRows).run()
   tx.insert(glitches).values(glitchRows).run()
+  const locationOf = new Map(glitchRows.map((g) => [g.glitchId, g.locationId]))
   tx.insert(echoes)
     .values(
-      echoRows.map(([glitchId, description, timestamp, codename]) => ({
+      echoRows.map(([glitchId, description, timestamp, reporter]) => ({
         glitchId,
+        locationId: locationOf.get(glitchId),
         description,
         timestamp,
-        reportingGuardianId: idByCodename.get(codename)!,
+        ...(reporter.startsWith('villager:')
+          ? { reporterName: reporter.slice('villager:'.length) }
+          : { reportingGuardianId: idByCodename.get(reporter)! }),
+      })),
+    )
+    .run()
+  // Recent, so they still count towards opening a scouting quest.
+  const now = Date.now()
+  tx.insert(echoes)
+    .values(
+      looseReports.map(([locationId, description, reporterName], i) => ({
+        glitchId: null,
+        locationId,
+        description,
+        reporterName,
+        timestamp: new Date(now - (looseReports.length - i) * 60_000).toISOString(),
       })),
     )
     .run()
@@ -217,6 +253,7 @@ db.transaction((tx) => {
       bountyRows.map(([glitchId, codename, gold, paidAt]) => ({
         glitchId,
         guardianId: idByCodename.get(codename)!,
+        kind: 'slay' as const,
         gold,
         paidAt,
       })),
@@ -226,6 +263,6 @@ db.transaction((tx) => {
 
 console.log(
   `Seeded ${roleRows.length} roles, ${guardianRows.length} guardians, ${monsterRows.length} monsters, ` +
-    `${regionRows.length} regions, ${locationRows.length} locations, ${glitchRows.length} glitches, ${echoRows.length} echoes.`,
+    `${regionRows.length} regions, ${locationRows.length} locations, ${glitchRows.length} glitches, ${echoRows.length + looseReports.length} echoes.`,
 )
 console.log(`Demo logins: ${guardianRows.map((g) => g.codename).join(', ')} / password "${DEMO_PASSWORD}"`)

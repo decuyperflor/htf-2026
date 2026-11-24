@@ -6,7 +6,7 @@ import { formatTimestamp } from '#/lib/format.ts'
 import { questRank, type GlitchListItem } from '#/lib/glitch.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 
-const columns = ['ID', 'Monster', 'Status', 'Description', 'Location', 'Rank', 'Sightings', 'Party', 'Spotted', '']
+const columns = ['ID', 'Monster', 'Status', 'Description', 'Location', 'Rank', 'Sightings', 'Party', 'Reported', '']
 
 export function GlitchesTable({
   glitches,
@@ -71,7 +71,7 @@ export function GlitchesTable({
                   <span className="block text-xs text-muted">{glitch.regionName}</span>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <span className="font-bold">{questRank(glitch.locationDanger)}</span>
+                  <span className="font-bold">{glitch.rated ? questRank(glitch.locationDanger) : '?'}</span>
                   <span className="ml-2 inline-flex items-center gap-0.5 text-xs font-semibold text-[#8A6A2A]">
                     <Coins className="size-3.5" /> {glitch.reward}
                   </span>

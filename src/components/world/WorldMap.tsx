@@ -77,6 +77,8 @@ export function WorldMap({
   const [spotAt, setSpotAt] = useState<string | null>(null)
   /** A monster we just reported: open its quest once it is on the map. */
   const [justSpotted, setJustSpotted] = useState<string | null>(null)
+  /** Scouting quest whose investigate form is open. */
+  const [investigate, setInvestigate] = useState<string | null>(null)
   /** Which quest ranks (location danger 1–5) are shown. */
   const [ranks, setRanks] = useState<number[]>([1, 2, 3, 4, 5])
   const [selectedGlitch, setSelectedGlitch] = useState<string | null>(null)
@@ -157,6 +159,8 @@ export function WorldMap({
     const seen = new Set<string>()
     for (const g of glitches) {
       seen.add(g.glitchId)
+      // Scouting quests have no monster yet: they show as a question mark (see below).
+      if (!g.monsterId) continue
       const sim = sims.current.get(g.glitchId)
       const [tx, ty] = slotOf(g)
       const size = sizeFor(g.echoCount, g.danger)
@@ -329,23 +333,34 @@ export function WorldMap({
   const zoom = clamp01((MAP_W / view.w - 1) / 0.8)
   const zoomedIn = zoom > 0.6
   const guardianById = new Map(guardians.map((g) => [g.guardianId, g]))
-  const shownRank = (locationId: string) => ranks.includes(locationById.get(locationId)?.danger ?? 1)
-  const all = [...sims.current.values()].filter((s) => shownRank(s.locationId))
-  const active = glitches.filter((g) => g.status !== 'FIXED' && shownRank(g.locationId))
+  const glitchById = new Map(glitches.map((g) => [g.glitchId, g]))
+  const shownRank = (glitchId: string) => ranks.includes(glitchById.get(glitchId)?.locationDanger ?? 1)
+  const all = [...sims.current.values()].filter((s) => shownRank(s.id))
+  const active = glitches.filter((g) => g.status !== 'FIXED' && shownRank(g.glitchId))
+  /** Scouting quests: villagers report trouble, nobody knows the monster yet. */
+  const scouting = active.filter((g) => !g.monsterId)
   const counts: Record<string, number> = {}
   for (const g of active) counts[g.regionId] = (counts[g.regionId] ?? 0) + 1
   const names = Object.fromEntries(world.regions.map((r) => [r.regionId, r.name]))
   const selected = glitches.find((g) => g.glitchId === selectedGlitch) ?? null
   const selectedLoc = selectedLocation ? (locationById.get(selectedLocation) ?? null) : null
   const spotLoc = spotAt ? (locationById.get(spotAt) ?? null) : null
+  const investigating = investigate ? (glitches.find((g) => g.glitchId === investigate && !g.monsterId) ?? null) : null
   const manage = can(me, PERMISSIONS.locationManage)
   const spot = can(me, PERMISSIONS.echoCreate)
   const clickArea = manage || spot
-  /** Areas with a monster still at large: only those show a rank and a reward. */
-  const occupied = new Set(glitches.filter((g) => g.status !== 'FIXED').map((g) => g.locationId))
+  /** The open quest at each area: only those areas show a rank and a reward. */
+  const questAt = new Map(glitches.filter((g) => g.status !== 'FIXED').map((g) => [g.locationId, g]))
 
-  /** Guild master: area settings (with a spot link). Adventurers: spot a monster right there. */
+  /** An area with an open quest opens that quest; otherwise guild master: area settings, adventurers: spot a monster. */
   function openArea(locationId: string) {
+    const quest = questAt.get(locationId)
+    if (quest) {
+      const sim = sims.current.get(quest.glitchId)
+      if (sim) openQuest(sim)
+      else openScouting(quest)
+      return
+    }
     if (manage) {
       setSpotAt(null)
       setSelectedGlitch(null)
@@ -373,6 +388,20 @@ export function WorldMap({
     flyTo(b)
   }
 
+  /** Zoom onto a scouting quest's area (no monster to frame yet). */
+  function openScouting(g: GlitchListItem) {
+    const loc = locationById.get(g.locationId)
+    if (!loc) return
+    const b = fit({ x: loc.x - 70, y: loc.y - 45, w: 140, h: 90 }, aspect.current)
+    b.x += b.w * 0.17
+    setSelectedLocation(null)
+    setSpotAt(null)
+    setInvestigate(null)
+    setSelectedGlitch(g.glitchId)
+    setRegion(g.regionId)
+    flyTo(b)
+  }
+
   function zoomTo(regionId: string | null) {
     setSelectedGlitch(null)
     setSelectedLocation(null)
@@ -386,13 +415,14 @@ export function WorldMap({
   useEffect(() => {
     const id = focusGlitchId ?? justSpotted
     if (!id || focused.current === id) return
+    const glitch = glitchById.get(id)
     const sim = sims.current.get(id)
-    if (!sim) return
+    if (!sim && !(glitch && !glitch.monsterId)) return
     focused.current = id
     if (id === justSpotted) setJustSpotted(null)
-    const loc = locationById.get(sim.locationId)
-    if (loc && !ranks.includes(loc.danger)) setRanks((r) => [...r, loc.danger])
-    openQuest(sim)
+    if (glitch && !ranks.includes(glitch.locationDanger)) setRanks((r) => [...r, glitch.locationDanger])
+    if (sim) openQuest(sim)
+    else openScouting(glitch!)
     onFocused?.()
   })
 
@@ -465,8 +495,8 @@ export function WorldMap({
               onClick={clickArea ? () => openArea(l.locationId) : undefined}
             >
               <ellipse rx={24} ry={12} fill="#FAF7EF" fillOpacity={0.28} stroke="#101D38" strokeOpacity={0.45} strokeWidth={0.8} strokeDasharray="3 2" />
-              {occupied.has(l.locationId) && (
-                <circle r={1.8} cy={-4} fill={DANGER_COLORS[l.danger - 1]} stroke="#101D38" strokeWidth={0.5} />
+              {questAt.get(l.locationId)?.rated && (
+                <circle r={1.8} cy={-4} fill={DANGER_COLORS[questAt.get(l.locationId)!.locationDanger - 1]} stroke="#101D38" strokeWidth={0.5} />
               )}
             </g>
           ))}
@@ -475,8 +505,10 @@ export function WorldMap({
               area is just its name. Click: spot a monster there (guild master: settings). */}
           {zoom > 0.35 &&
             world.locations.map((l) => {
-              const quest = occupied.has(l.locationId)
-              const w = quest ? l.name.length * 3.1 + 34 : l.name.length * 3.1 + 12
+              const q = questAt.get(l.locationId)
+              const quest = q && q.rated ? q : null
+              const unknown = q && !q.rated
+              const w = quest ? l.name.length * 3.1 + 34 : l.name.length * 3.1 + (unknown ? 22 : 12)
               return (
                 <g
                   key={l.locationId}
@@ -493,15 +525,25 @@ export function WorldMap({
                   <rect x={-w / 2} y={-5.5} width={w} height={11} rx={1.5} fill="#FAF7EF" stroke="#101D38" strokeWidth={0.7} />
                   {quest ? (
                     <>
-                      <circle cx={-w / 2 + 6} cy={0} r={4.2} fill={DANGER_COLORS[l.danger - 1]} stroke="#101D38" strokeWidth={0.6} />
+                      <circle cx={-w / 2 + 6} cy={0} r={4.2} fill={DANGER_COLORS[quest.locationDanger - 1]} stroke="#101D38" strokeWidth={0.6} />
                       <text x={-w / 2 + 6} y={1.9} textAnchor="middle" fontSize={5} fontWeight={800} fill="#101D38">
-                        {questRank(l.danger)}
+                        {questRank(quest.locationDanger)}
                       </text>
                       <text x={-w / 2 + 12} y={1.9} fontSize={5} fontWeight={600} fill="#101D38">
                         {l.name}
                       </text>
                       <text x={w / 2 - 3} y={1.9} textAnchor="end" fontSize={4.6} fontWeight={700} fill="#8A6A2A">
-                        {l.reward}g
+                        {quest.reward}g
+                      </text>
+                    </>
+                  ) : unknown ? (
+                    <>
+                      <circle cx={-w / 2 + 6} cy={0} r={4.2} fill="#39C3D6" stroke="#101D38" strokeWidth={0.6} />
+                      <text x={-w / 2 + 6} y={1.9} textAnchor="middle" fontSize={5} fontWeight={800} fill="#101D38">
+                        ?
+                      </text>
+                      <text x={-w / 2 + 12} y={1.9} fontSize={5} fontWeight={600} fill="#101D38">
+                        {l.name}
                       </text>
                     </>
                   ) : (
@@ -564,6 +606,36 @@ export function WorldMap({
                     </g>
                   )
                 })}
+              </g>
+            )
+          })}
+
+          {/* Scouting quests: a question mark over the area, villagers' reports piling up */}
+          {scouting.map((g) => {
+            const l = locationById.get(g.locationId)
+            if (!l) return null
+            const bob = Math.sin((now ?? 0) / 400 + l.x) * 2
+            const on = selectedGlitch === g.glitchId
+            return (
+              <g
+                key={g.glitchId}
+                transform={`translate(${l.x} ${l.y - 6 + bob})`}
+                className="cursor-pointer"
+                role="button"
+                aria-label={`Scouting quest at ${l.name}: ${g.villagerReports} villager reports`}
+                onClick={() => openScouting(g)}
+              >
+                <circle r={on ? 13 : 11} fill="#39C3D6" opacity={0.25} />
+                <circle r={9} fill="#101D38" stroke={on ? '#ffcf4d' : '#C9A24B'} strokeWidth={on ? 2 : 1.4} />
+                <text y={4.6} textAnchor="middle" fontSize={13} fontWeight={900} fontFamily="Cinzel, Georgia, serif" fill="#E9E2CF">
+                  ?
+                </text>
+                <g transform="translate(8 -8)">
+                  <circle r={4.4} fill="#B3263E" stroke="#FAF7EF" strokeWidth={0.8} />
+                  <text y={1.8} textAnchor="middle" fontSize={5} fontWeight={800} fill="#fff">
+                    {g.villagerReports}
+                  </text>
+                </g>
               </g>
             )
           })}
@@ -639,7 +711,17 @@ export function WorldMap({
 
       {selected && (
         <div data-panel>
-          <QuestPanel glitch={selected} me={me} guardians={guardians} onClose={() => setSelectedGlitch(null)} onChanged={onChanged} />
+          <QuestPanel
+            glitch={selected}
+            me={me}
+            guardians={guardians}
+            onClose={() => setSelectedGlitch(null)}
+            onChanged={onChanged}
+            onInvestigate={() => {
+              setInvestigate(selected.glitchId)
+              setSelectedGlitch(null)
+            }}
+          />
         </div>
       )}
       {selectedLoc && (
@@ -656,6 +738,24 @@ export function WorldMap({
           />
         </div>
       )}
+      {investigating && (
+        <div data-panel>
+          <SpotPanel
+            key={investigating.glitchId}
+            location={locationById.get(investigating.locationId)!}
+            regionName={investigating.regionName}
+            monsters={monsters}
+            investigate={investigating}
+            onClose={() => setInvestigate(null)}
+            onSpotted={async (glitchId) => {
+              await onChanged()
+              setInvestigate(null)
+              focused.current = null
+              setJustSpotted(glitchId)
+            }}
+          />
+        </div>
+      )}
       {spotLoc && (
         <div data-panel>
           <SpotPanel
@@ -667,6 +767,7 @@ export function WorldMap({
             onSpotted={async (glitchId) => {
               await onChanged()
               setSpotAt(null)
+              focused.current = null
               setJustSpotted(glitchId)
             }}
           />

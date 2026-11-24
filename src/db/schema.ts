@@ -103,11 +103,8 @@ export const glitches = sqliteTable('glitches', {
   description: text('description').notNull(),
   /** ISO 8601, so lexical order is chronological order. */
   timestamp: text('timestamp').notNull(),
-  /** What kind of monster this glitch is. */
-  monsterId: text('monster_id')
-    .notNull()
-    .default('slime')
-    .references(() => monsters.monsterId),
+  /** What kind of monster this glitch is; null while it is still a scouting quest (nobody saw it yet). */
+  monsterId: text('monster_id').references(() => monsters.monsterId),
   /** Where on the map the monster was spotted. */
   locationId: text('location_id')
     .notNull()
@@ -115,9 +112,16 @@ export const glitches = sqliteTable('glitches', {
     .references(() => locations.locationId),
   /** ISO 8601; set when the status becomes FIXED (slain), for the chronicle. */
   slainAt: text('slain_at'),
+  /** Quest rank 1..5 (D..S) the guild master gave this quest; null = not rated yet. */
+  danger: integer('danger'),
+  /** Gold per party member, set by the guild master with the rank. */
+  reward: integer('reward'),
 })
 
-/** Gold paid out per adventurer per slain monster (one row each, so never paid twice). */
+/**
+ * Gold paid out per adventurer per glitch and kind (one row each, so never paid twice):
+ * 'slay' for the party when the monster is slain, 'scout' for whoever identified it.
+ */
 export const bounties = sqliteTable(
   'bounties',
   {
@@ -127,11 +131,12 @@ export const bounties = sqliteTable(
     guardianId: integer('guardian_id')
       .notNull()
       .references(() => guardians.guardianId, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: ['slay', 'scout'] }).notNull().default('slay'),
     gold: integer('gold').notNull(),
     /** ISO 8601 */
     paidAt: text('paid_at').notNull(),
   },
-  (t) => [primaryKey({ columns: [t.glitchId, t.guardianId] })],
+  (t) => [primaryKey({ columns: [t.glitchId, t.guardianId, t.kind] })],
 )
 
 /** Adventurers (defenders) on the quest for a monster: accepted themselves or sent by the guild. */
@@ -153,19 +158,24 @@ export const glitchAssignments = sqliteTable(
   (t) => [primaryKey({ columns: [t.glitchId, t.guardianId] })],
 )
 
+/**
+ * A report (sighting). Either from a guardian (reporting_guardian_id) or from a villager
+ * (reporter_name): villagers have no account, their reports come in by themselves.
+ * A villager report starts loose (no glitch); enough of them at one place open a scouting quest.
+ */
 export const echoes = sqliteTable(
   'echoes',
   {
     echoId: integer('echo_id').primaryKey({ autoIncrement: true }),
-    glitchId: text('glitch_id')
-      .notNull()
-      .references(() => glitches.glitchId, { onDelete: 'cascade' }),
+    glitchId: text('glitch_id').references(() => glitches.glitchId, { onDelete: 'cascade' }),
+    /** Where it happened (also for loose villager reports). */
+    locationId: text('location_id').references(() => locations.locationId),
     description: text('description').notNull(),
     /** ISO 8601 */
     timestamp: text('timestamp').notNull(),
-    reportingGuardianId: integer('reporting_guardian_id')
-      .notNull()
-      .references(() => guardians.guardianId),
+    reportingGuardianId: integer('reporting_guardian_id').references(() => guardians.guardianId),
+    /** Villager who reported it, e.g. 'Maud the baker' (when no guardian did). */
+    reporterName: text('reporter_name'),
   },
-  (t) => [index('echoes_glitch_idx').on(t.glitchId)],
+  (t) => [index('echoes_glitch_idx').on(t.glitchId), index('echoes_location_idx').on(t.locationId, t.timestamp)],
 )

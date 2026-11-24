@@ -7,7 +7,7 @@ import { GlitchesTable } from '#/components/GlitchesTable.tsx'
 import { QuestBoard } from '#/components/QuestBoard.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { GLITCH_STATUSES, STATUS_LABELS, questRank, type GlitchListItem, type GlitchStatus } from '#/lib/glitch.ts'
-import { getGlitches } from '#/lib/glitches.functions.ts'
+import { getGlitches, summonVillagers } from '#/lib/glitches.functions.ts'
 import { getGuardians } from '#/lib/guardians.functions.ts'
 import { resilient, usePolling } from '#/lib/polling.ts'
 import { useShortcuts } from '#/lib/shortcuts.ts'
@@ -145,6 +145,7 @@ function QuestBoardPage() {
               <ScrollText className="size-4" />
               Chronicle (PDF)
             </Link>
+            {can(guardian, PERMISSIONS.locationManage) && <SummonButton onDone={() => router.invalidate()} />}
             {can(guardian, PERMISSIONS.echoCreate) && (
               <Link
                 to="/report"
@@ -326,5 +327,37 @@ function QuestBoardPage() {
         </ol>
       </section>
     </div>
+  )
+}
+
+/** Guild master (demo): villagers flood a quiet place with reports, which opens a scouting quest. */
+function SummonButton({ onDone }: { onDone: () => Promise<void> | void }) {
+  const [pending, setPending] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  async function summon() {
+    setPending(true)
+    setMessage(null)
+    try {
+      const { glitchId } = await summonVillagers()
+      await onDone()
+      setMessage(glitchId ? `New scouting quest ${glitchId}` : 'Villagers reported')
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'The villagers stayed home')
+    } finally {
+      setPending(false)
+    }
+  }
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        onClick={summon}
+        disabled={pending}
+        className="inline-flex items-center gap-2 rounded-lg border border-line bg-card px-4 py-2 text-sm font-medium text-fg hover:bg-subtle disabled:opacity-60"
+      >
+        🏘️ {pending ? 'Summoning…' : 'Summon villager reports'}
+      </button>
+      {message && <span className="text-xs text-muted">{message}</span>}
+    </span>
   )
 }

@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '#/db/index.ts'
 import {
+  bounties,
   echoes,
   glitchAssignments,
   glitches,
@@ -13,12 +14,13 @@ import {
 import { PERMISSIONS } from '#/lib/auth.ts'
 import {
   GLITCH_STATUSES,
-  formatGlitchId,
   type GlitchDetail,
   type GlitchListItem,
   type GlitchStatus,
 } from '#/lib/glitch.ts'
+import { checkAnswer, newPuzzle, retryAt, strikeBack } from '#/server/puzzle.ts'
 import { activeQuestOf, payBounties } from '#/server/quests.ts'
+import { nextGlitchId, summonVillagerReports, villagerTick } from '#/server/villagers.ts'
 import { requireGuardian } from '#/server/session.ts'
 
 const MAX_DESCRIPTION = 1000
@@ -41,18 +43,20 @@ function listGlitches(glitchId?: string): GlitchListItem[] {
       description: glitches.description,
       timestamp: glitches.timestamp,
       monsterId: glitches.monsterId,
-      monsterName: monsters.name,
-      danger: monsters.danger,
+      monsterName: sql<string>`coalesce(${monsters.name}, 'Unknown creature')`,
+      danger: sql<number>`coalesce(${monsters.danger}, 1)`,
       locationId: glitches.locationId,
       locationName: locations.name,
       regionId: regions.regionId,
       regionName: regions.name,
-      locationDanger: locations.danger,
-      reward: locations.reward,
+      locationDanger: sql<number>`coalesce(${glitches.danger}, ${locations.danger})`,
+      reward: sql<number>`coalesce(${glitches.reward}, ${locations.reward})`,
+      rated: sql<number>`${glitches.danger} is not null`,
       echoCount: count(echoes.echoId),
+      villagerReports: sql<number>`count(${echoes.reporterName})`,
     })
     .from(glitches)
-    .innerJoin(monsters, eq(monsters.monsterId, glitches.monsterId))
+    .leftJoin(monsters, eq(monsters.monsterId, glitches.monsterId))
     .innerJoin(locations, eq(locations.locationId, glitches.locationId))
     .innerJoin(regions, eq(regions.regionId, locations.regionId))
     .leftJoin(echoes, eq(echoes.glitchId, glitches.glitchId))
@@ -70,12 +74,13 @@ function listGlitches(glitchId?: string): GlitchListItem[] {
     assigned.set(a.glitchId, [...(assigned.get(a.glitchId) ?? []), a.guardianId])
   }
 
-  return rows.map((r) => ({ ...r, assignedGuardianIds: assigned.get(r.glitchId) ?? [] }))
+  return rows.map((r) => ({ ...r, rated: Boolean(r.rated), assignedGuardianIds: assigned.get(r.glitchId) ?? [] }))
 }
 
 export const getGlitches = createServerFn({ method: 'GET' }).handler(
   async (): Promise<GlitchListItem[]> => {
     requireGuardian(PERMISSIONS.glitchView)
+    villagerTick()
     return listGlitches()
   },
 )
@@ -90,14 +95,15 @@ export const getGlitch = createServerFn({ method: 'GET' })
     const glitchEchoes = db
       .select({
         echoId: echoes.echoId,
-        glitchId: echoes.glitchId,
+        glitchId: sql<string>`${echoes.glitchId}`,
         description: echoes.description,
         timestamp: echoes.timestamp,
         reportingGuardianId: echoes.reportingGuardianId,
         reporterCodename: guardians.codename,
+        reporterName: echoes.reporterName,
       })
       .from(echoes)
-      .innerJoin(guardians, eq(guardians.guardianId, echoes.reportingGuardianId))
+      .leftJoin(guardians, eq(guardians.guardianId, echoes.reportingGuardianId))
       .where(eq(echoes.glitchId, glitchId))
       .orderBy(asc(echoes.timestamp))
       .all()
@@ -119,8 +125,8 @@ export const getGlitch = createServerFn({ method: 'GET' })
 
 /**
  * Report an echo (a sighting). Without `glitchId` the echo opens a new glitch
- * (every echo is a glitch by default) of the chosen monster type; with
- * `glitchId` it is added to that glitch.
+ * (every echo is a glitch by default) of the chosen monster type: a Spotted quest
+ * that waits for the guild master's rank & reward. With `glitchId` it is added to that glitch.
  */
 export const reportEcho = createServerFn({ method: 'POST' })
   .validator(
@@ -148,18 +154,11 @@ export const reportEcho = createServerFn({ method: 'POST' })
         const location = tx.select().from(locations).where(eq(locations.locationId, data.locationId)).get()
         if (!location) throw new Error(`Unknown location: ${data.locationId}`)
 
-        // Next number after the highest existing 'GL-xxxx'.
-        const { maxNo } = tx
-          .select({
-            maxNo: sql<number>`coalesce(max(cast(substr(${glitches.glitchId}, 4) as integer)), 0)`,
-          })
-          .from(glitches)
-          .get()!
-        glitchId = formatGlitchId(maxNo + 1)
+        glitchId = nextGlitchId(tx)
         tx.insert(glitches)
           .values({
             glitchId,
-            status: 'LEAKED',
+            status: 'ASSESSING',
             description: data.description,
             timestamp,
             monsterId,
@@ -168,9 +167,11 @@ export const reportEcho = createServerFn({ method: 'POST' })
           .run()
       }
 
+      const { locationId } = tx.select({ locationId: glitches.locationId }).from(glitches).where(eq(glitches.glitchId, glitchId)).get()!
       tx.insert(echoes)
         .values({
           glitchId,
+          locationId,
           description: data.description,
           timestamp,
           reportingGuardianId: guardian.guardianId,
@@ -189,6 +190,11 @@ export const updateGlitchStatus = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     requireGuardian(PERMISSIONS.glitchUpdateStatus)
     db.transaction((tx) => {
+      const glitch = tx.select().from(glitches).where(eq(glitches.glitchId, data.glitchId)).get()
+      if (!glitch) throw new Error(`Glitch ${data.glitchId} not found`)
+      if (!glitch.monsterId && data.status !== 'LEAKED') {
+        throw new Error('Nobody has seen this monster yet – an adventurer has to investigate first')
+      }
       const result = tx
         .update(glitches)
         .set({ status: data.status, slainAt: data.status === 'FIXED' ? new Date().toISOString() : null })
@@ -201,31 +207,134 @@ export const updateGlitchStatus = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
+/** Scouting reward for the adventurer who identifies the monster behind the villagers' reports. */
+const SCOUT_REWARD = 25
+
 /**
- * A party member reports the monster slain: the quest is complete, the whole party
- * collects the reward and is free to take the next quest.
+ * Investigate a scouting quest: the adventurer says which monster is behind the villagers'
+ * reports. The quest becomes Spotted and waits for the guild master's rank & reward.
  */
-export const completeQuest = createServerFn({ method: 'POST' })
-  .validator((input: { glitchId: string }) => ({ glitchId: String(input?.glitchId) }))
+export const investigateQuest = createServerFn({ method: 'POST' })
+  .validator((input: { glitchId: string; monsterId: string; description: string }) => ({
+    glitchId: String(input?.glitchId),
+    monsterId: String(input?.monsterId),
+    description: cleanDescription(input?.description),
+  }))
   .handler(async ({ data }) => {
-    const adventurer = requireGuardian(PERMISSIONS.questAccept)
-    const reward = db.transaction((tx) => {
+    const scout = requireGuardian(PERMISSIONS.questAccept)
+    db.transaction((tx) => {
       const glitch = tx.select().from(glitches).where(eq(glitches.glitchId, data.glitchId)).get()
       if (!glitch) throw new Error(`Glitch ${data.glitchId} not found`)
-      if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
-      const member = tx
-        .select({ id: glitchAssignments.guardianId })
-        .from(glitchAssignments)
-        .where(and(eq(glitchAssignments.glitchId, data.glitchId), eq(glitchAssignments.guardianId, adventurer.guardianId)))
-        .get()
-      if (!member) throw new Error('Only the quest party can complete this quest')
-      tx.update(glitches)
-        .set({ status: 'FIXED', slainAt: new Date().toISOString() })
-        .where(eq(glitches.glitchId, data.glitchId))
+      if (glitch.status !== 'LEAKED' || glitch.monsterId) throw new Error('This monster has already been identified')
+      const monster = tx.select().from(monsters).where(eq(monsters.monsterId, data.monsterId)).get()
+      if (!monster) throw new Error(`Unknown monster: ${data.monsterId}`)
+      const now = new Date().toISOString()
+      tx.update(glitches).set({ monsterId: monster.monsterId, status: 'ASSESSING' }).where(eq(glitches.glitchId, data.glitchId)).run()
+      tx.insert(echoes)
+        .values({
+          glitchId: data.glitchId,
+          locationId: glitch.locationId,
+          description: data.description,
+          timestamp: now,
+          reportingGuardianId: scout.guardianId,
+        })
+        .run()
+      tx.insert(bounties)
+        .values({ glitchId: data.glitchId, guardianId: scout.guardianId, kind: 'scout', gold: SCOUT_REWARD, paidAt: now })
+        .onConflictDoNothing()
+        .run()
+    })
+    return { ok: true, reward: SCOUT_REWARD }
+  })
+
+/** The guild master sets a Spotted quest's rank (1..5 = D..S) and reward: adventurers can now accept it. */
+export const rateQuest = createServerFn({ method: 'POST' })
+  .validator((input: { glitchId: string; danger: number; reward: number }) => {
+    const danger = Math.round(Number(input?.danger))
+    const reward = Math.round(Number(input?.reward))
+    if (!(danger >= 1 && danger <= 5)) throw new Error('Rank must be between D and S')
+    if (!(reward >= 0 && reward <= 100_000)) throw new Error('Reward must be between 0 and 100000 gold')
+    return { glitchId: String(input?.glitchId), danger, reward }
+  })
+  .handler(async ({ data }) => {
+    requireGuardian(PERMISSIONS.locationManage)
+    const glitch = db.select().from(glitches).where(eq(glitches.glitchId, data.glitchId)).get()
+    if (!glitch) throw new Error(`Glitch ${data.glitchId} not found`)
+    if (!glitch.monsterId) throw new Error('Nobody has seen this monster yet – an adventurer has to investigate first')
+    if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
+    db.update(glitches).set({ danger: data.danger, reward: data.reward }).where(eq(glitches.glitchId, data.glitchId)).run()
+    return { ok: true }
+  })
+
+/** Guild master (demo): villagers flood a quiet place with reports, opening a scouting quest. */
+export const summonVillagers = createServerFn({ method: 'POST' }).handler(async () => {
+  requireGuardian(PERMISSIONS.locationManage)
+  return summonVillagerReports()
+})
+
+/** The party member and the quest they want to fight, or an error. */
+function fightCheck(glitchId: string, guardianId: number) {
+  const glitch = db.select().from(glitches).where(eq(glitches.glitchId, glitchId)).get()
+  if (!glitch) throw new Error(`Glitch ${glitchId} not found`)
+  if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
+  if (glitch.status !== 'CONTAINING') throw new Error('Accept the quest first')
+  const member = db
+    .select({ id: glitchAssignments.guardianId })
+    .from(glitchAssignments)
+    .where(and(eq(glitchAssignments.glitchId, glitchId), eq(glitchAssignments.guardianId, guardianId)))
+    .get()
+  if (!member) throw new Error('Only the quest party can fight this monster')
+  const { rank } = db
+    .select({ rank: sql<number>`coalesce(${glitches.danger}, ${locations.danger})` })
+    .from(glitches)
+    .innerJoin(locations, eq(locations.locationId, glitches.locationId))
+    .where(eq(glitches.glitchId, glitchId))
+    .get()!
+  return rank
+}
+
+export type FightPuzzle = { seed: number; code: string; ask: string; rank: number; retryAt: number | null }
+
+/** Start (or retry) the fight: a code puzzle as hard as the quest rank. */
+export const getFightPuzzle = createServerFn({ method: 'POST' })
+  .validator((input: { glitchId: string }) => ({ glitchId: String(input?.glitchId) }))
+  .handler(async ({ data }): Promise<FightPuzzle> => {
+    const adventurer = requireGuardian(PERMISSIONS.questAccept)
+    const rank = fightCheck(data.glitchId, adventurer.guardianId)
+    return { ...newPuzzle(rank), rank, retryAt: retryAt(data.glitchId, adventurer.guardianId) }
+  })
+
+export type FightResult = { slain: true; reward: number } | { slain: false; retryAt: number }
+
+/** Answer the puzzle. Right: the monster is slain and the party is paid. Wrong: it strikes back. */
+export const answerFightPuzzle = createServerFn({ method: 'POST' })
+  .validator((input: { glitchId: string; seed: number; answer: number }) => {
+    const answer = Number(input?.answer)
+    if (!Number.isFinite(answer)) throw new Error('Your answer must be a number')
+    return { glitchId: String(input?.glitchId), seed: Math.floor(Number(input?.seed)), answer }
+  })
+  .handler(async ({ data }): Promise<FightResult> => {
+    const adventurer = requireGuardian(PERMISSIONS.questAccept)
+    const rank = fightCheck(data.glitchId, adventurer.guardianId)
+    if (retryAt(data.glitchId, adventurer.guardianId)) throw new Error('The monster is still striking back – wait a moment')
+    if (!checkAnswer(data.seed, rank, data.answer)) {
+      return { slain: false, retryAt: strikeBack(data.glitchId, adventurer.guardianId) }
+    }
+    const reward = db.transaction((tx) => {
+      const now = new Date().toISOString()
+      tx.update(glitches).set({ status: 'FIXED', slainAt: now }).where(eq(glitches.glitchId, data.glitchId)).run()
+      tx.insert(echoes)
+        .values({
+          glitchId: data.glitchId,
+          locationId: sql`(select ${glitches.locationId} from ${glitches} where ${glitches.glitchId} = ${data.glitchId})`,
+          description: `Monster slain! The spell resolved to ${data.answer}.`,
+          timestamp: now,
+          reportingGuardianId: adventurer.guardianId,
+        })
         .run()
       return payBounties(tx, data.glitchId)
     })
-    return { ok: true, reward }
+    return { slain: true, reward }
   })
 
 /** An adventurer takes on (or leaves) the quest for a monster. */
@@ -242,8 +351,13 @@ export const setQuestAccepted = createServerFn({ method: 'POST' })
       if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
 
       if (data.accepted) {
+        if (glitch.status === 'LEAKED' || !glitch.monsterId) throw new Error('Investigate first: nobody knows which monster this is yet')
+        if (glitch.danger === null) throw new Error('The guild master still has to set the rank and reward of this quest')
         const busy = activeQuestOf(tx, adventurer.guardianId, data.glitchId)
         if (busy) throw new Error(`You're already on quest ${busy}. Leave that quest first – one monster at a time!`)
+        if (glitch.status === 'ASSESSING') {
+          tx.update(glitches).set({ status: 'CONTAINING' }).where(eq(glitches.glitchId, data.glitchId)).run()
+        }
         tx.insert(glitchAssignments)
           .values({
             glitchId: data.glitchId,
@@ -322,6 +436,14 @@ export const assignAdventurers = createServerFn({ method: 'POST' })
           .run()
       }
       if (toAdd.length) {
+        if (!glitch.monsterId) throw new Error('Investigate first: nobody knows which monster this is yet')
+        if (glitch.status === 'ASSESSING') {
+          const location = tx.select().from(locations).where(eq(locations.locationId, glitch.locationId)).get()!
+          tx.update(glitches)
+            .set({ status: 'CONTAINING', danger: glitch.danger ?? location.danger, reward: glitch.reward ?? location.reward })
+            .where(eq(glitches.glitchId, data.glitchId))
+            .run()
+        }
         tx.insert(glitchAssignments)
           .values(
             toAdd.map((guardianId) => ({
@@ -364,7 +486,9 @@ export const getThreats = createServerFn({ method: 'GET' }).handler(async (): Pr
     .innerJoin(monsters, eq(monsters.monsterId, glitches.monsterId))
     .innerJoin(locations, eq(locations.locationId, glitches.locationId))
     .innerJoin(regions, eq(regions.regionId, locations.regionId))
-    .where(sql`${glitches.status} != 'FIXED' and (${monsters.danger} >= 5 or ${locations.danger} >= 5)`)
+    .where(
+      sql`${glitches.status} != 'FIXED' and (${monsters.danger} >= 5 or coalesce(${glitches.danger}, ${locations.danger}) >= 5)`,
+    )
     .orderBy(desc(glitches.timestamp))
     .all()
 })

@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { asc, desc, eq, inArray } from 'drizzle-orm'
+import { asc, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '#/db/index.ts'
 import { bounties, echoes, glitchAssignments, glitches, guardians, locations, monsters, regions } from '#/db/schema.ts'
 import { PERMISSIONS } from '#/lib/auth.ts'
@@ -36,7 +36,7 @@ export const getChronicle = createServerFn({ method: 'GET' }).handler(async (): 
       monsterDanger: monsters.danger,
       locationName: locations.name,
       regionName: regions.name,
-      locationDanger: locations.danger,
+      locationDanger: sql<number>`coalesce(${glitches.danger}, ${locations.danger})`,
     })
     .from(glitches)
     .innerJoin(monsters, eq(monsters.monsterId, glitches.monsterId))
@@ -53,10 +53,11 @@ export const getChronicle = createServerFn({ method: 'GET' }).handler(async (): 
       glitchId: echoes.glitchId,
       description: echoes.description,
       timestamp: echoes.timestamp,
-      reporter: guardians.codename,
+      // A guardian's codename, or the villager who reported it.
+      reporter: sql<string>`coalesce(${guardians.codename}, ${echoes.reporterName}, 'a villager')`,
     })
     .from(echoes)
-    .innerJoin(guardians, eq(guardians.guardianId, echoes.reportingGuardianId))
+    .leftJoin(guardians, eq(guardians.guardianId, echoes.reportingGuardianId))
     .where(inArray(echoes.glitchId, ids))
     .orderBy(asc(echoes.timestamp))
     .all()
@@ -74,12 +75,19 @@ export const getChronicle = createServerFn({ method: 'GET' }).handler(async (): 
     .innerJoin(guardians, eq(guardians.guardianId, bounties.guardianId))
     .where(inArray(bounties.glitchId, ids))
     .all()
+  // Scout + slay bounties of the same adventurer on the same quest: one line in the chronicle.
+  const paidTotals = new Map<string, (typeof paid)[number]>()
+  for (const b of paid) {
+    const key = `${b.glitchId}:${b.guardianId}`
+    const prev = paidTotals.get(key)
+    paidTotals.set(key, prev ? { ...prev, gold: prev.gold + b.gold } : b)
+  }
 
   return rows.map((r) => {
     // Everyone who was paid, plus party members who joined without a bounty (0 gold).
     const members = new Map<number, { codename: string; gold: number }>()
     for (const p of party.filter((p) => p.glitchId === r.glitchId)) members.set(p.guardianId, { codename: p.codename, gold: 0 })
-    for (const b of paid.filter((b) => b.glitchId === r.glitchId)) members.set(b.guardianId, { codename: b.codename, gold: b.gold })
+    for (const b of [...paidTotals.values()].filter((b) => b.glitchId === r.glitchId)) members.set(b.guardianId, { codename: b.codename, gold: b.gold })
     return {
       ...r,
       sightings: sightings.filter((s) => s.glitchId === r.glitchId).map(({ glitchId: _g, ...s }) => s),

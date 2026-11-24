@@ -1,12 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { Coins, Swords, Trophy, X } from 'lucide-react'
-import { useState } from 'react'
+import { Coins, X } from 'lucide-react'
 import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
+import { QuestActions } from '#/components/quest/QuestActions.tsx'
 import { StatusBadge } from '#/components/StatusBadge.tsx'
-import { Button } from '#/components/ui/Button.tsx'
-import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
-import { questRank, type GlitchListItem } from '#/lib/glitch.ts'
-import { completeQuest, setQuestAccepted } from '#/lib/glitches.functions.ts'
+import type { SessionGuardian } from '#/lib/auth.ts'
+import { questRank, questStage, type GlitchListItem } from '#/lib/glitch.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 
 /** The quest card for a monster: rank, reward, party and the accept button. */
@@ -16,44 +14,19 @@ export function QuestPanel({
   guardians,
   onClose,
   onChanged,
+  onInvestigate,
 }: {
   glitch: GlitchListItem
   me: SessionGuardian
   guardians: GuardianSummary[]
   onClose: () => void
   onChanged: () => Promise<void> | void
+  onInvestigate?: () => void
 }) {
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const onQuest = glitch.assignedGuardianIds.includes(me.guardianId)
   const byId = new Map(guardians.map((g) => [g.guardianId, g]))
-  const slain = glitch.status === 'FIXED'
-
-  async function toggle() {
-    setPending(true)
-    setError(null)
-    try {
-      await setQuestAccepted({ data: { glitchId: glitch.glitchId, accepted: !onQuest } })
-      await onChanged()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setPending(false)
-    }
-  }
-
-  async function complete() {
-    setPending(true)
-    setError(null)
-    try {
-      await completeQuest({ data: { glitchId: glitch.glitchId } })
-      await onChanged()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setPending(false)
-    }
-  }
+  const stage = questStage(glitch)
+  const scouting = stage === 'scouting'
+  const ranked = stage !== 'scouting' && stage !== 'awaiting-rank'
 
   return (
     <aside className="absolute top-4 right-4 bottom-4 flex w-80 max-w-[calc(100%-2rem)] flex-col gap-3 overflow-y-auto rounded-sm border border-[#C9A24B] bg-[#FAF7EF] p-4 text-[#101D38] shadow-[inset_0_0_0_3px_#FAF7EF,inset_0_0_0_4px_rgb(201_162_75/0.5),0_10px_30px_rgb(0_0_0/0.4)]">
@@ -70,7 +43,11 @@ export function QuestPanel({
         </div>
         <div className="min-w-0">
           <h3 className="text-lg leading-tight font-bold">{glitch.monsterName}</h3>
-          <DangerStars danger={glitch.danger} />
+          {scouting ? (
+            <p className="text-xs font-semibold text-[#101D38]/70">{glitch.villagerReports} villager reports</p>
+          ) : (
+            <DangerStars danger={glitch.danger} />
+          )}
           <div className="mt-1">
             <StatusBadge status={glitch.status} />
           </div>
@@ -82,12 +59,12 @@ export function QuestPanel({
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
           <dt className="text-xs text-[#101D38]/60">Quest rank</dt>
-          <dd className="text-2xl font-black">{questRank(glitch.locationDanger)}</dd>
+          <dd className="text-2xl font-black">{ranked ? questRank(glitch.locationDanger) : '?'}</dd>
         </div>
         <div className="rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
           <dt className="text-xs text-[#101D38]/60">Reward</dt>
           <dd className="flex items-center gap-1 text-2xl font-black text-[#8A6A2A]">
-            <Coins className="size-5" /> {glitch.reward}
+            <Coins className="size-5" /> {ranked ? glitch.reward : '?'}
           </dd>
         </div>
         <div className="col-span-2 rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
@@ -116,31 +93,8 @@ export function QuestPanel({
         </div>
       </dl>
 
-      {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-
-      {slain && (
-        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-700/20">
-          🏆 Quest complete – {glitch.reward} gold paid to the party
-        </p>
-      )}
-
       <div className="mt-auto flex flex-col gap-2">
-        {onQuest && !slain && (
-          <Button onClick={complete} disabled={pending} className="!bg-emerald-700 hover:!bg-emerald-800">
-            <Trophy className="size-4" />
-            {pending ? '…' : `Complete quest · claim ${glitch.reward} gold`}
-          </Button>
-        )}
-        {can(me, PERMISSIONS.questAccept) && !slain && (
-          <Button onClick={toggle} disabled={pending} variant={onQuest ? 'secondary' : 'primary'} className={onQuest ? '!border-[#101D38]/30 !bg-white !text-[#101D38]' : ''}>
-            <Swords className="size-4" />
-            {pending ? '…' : onQuest ? 'Leave quest' : 'Accept quest'}
-          </Button>
-        )}
+        <QuestActions glitch={glitch} me={me} onChanged={onChanged} onInvestigate={onInvestigate} />
         <Link
           to="/glitches/$glitchId"
           params={{ glitchId: glitch.glitchId }}

@@ -1,18 +1,19 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Coins, Eye, Swords, Trophy } from 'lucide-react'
+import { ArrowRight, Coins, Eye } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
 import { MonsterIcon } from '#/components/MonsterIcon.tsx'
+import { QuestActions } from '#/components/quest/QuestActions.tsx'
 import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
 import { formatTimestamp } from '#/lib/format.ts'
 import { GLITCH_STATUSES, STATUS_LABELS, questRank, type GlitchListItem, type GlitchStatus } from '#/lib/glitch.ts'
-import { completeQuest, setQuestAccepted, updateGlitchStatus } from '#/lib/glitches.functions.ts'
+import { updateGlitchStatus } from '#/lib/glitches.functions.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 
 /** The workflow, one column per step, worded like a guild would. */
 const COLUMNS: Record<GlitchStatus, { title: string; hint: string; sign: string }> = {
-  LEAKED: { title: 'Spotted', hint: 'New requests – who takes them?', sign: '#B3263E' },
-  ASSESSING: { title: 'Scouting', hint: 'The guild is sizing it up', sign: '#8A6A2A' },
-  CONTAINING: { title: 'Engaged', hint: 'Adventurers are fighting', sign: '#1E6F7C' },
+  LEAKED: { title: 'Scouting', hint: 'Villagers report trouble – who investigates?', sign: '#1E6F7C' },
+  ASSESSING: { title: 'Spotted', hint: 'Monster identified – the guild sets the bounty', sign: '#B3263E' },
+  CONTAINING: { title: 'Engaged', hint: 'Adventurers are fighting', sign: '#8A6A2A' },
   FIXED: { title: 'Slain', hint: 'Bounties paid out', sign: '#3F6B4E' },
 }
 /** Slain is history: keep the board short, the chronicle has the rest. */
@@ -52,29 +53,6 @@ export function QuestBoard({
       await onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not move the quest')
-    } finally {
-      setPending(({ [glitchId]: _done, ...rest }) => rest)
-    }
-  }
-
-  async function accept(glitchId: string, accepted: boolean) {
-    setError(null)
-    try {
-      await setQuestAccepted({ data: { glitchId, accepted } })
-      await onChanged()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not accept the quest')
-    }
-  }
-
-  async function complete(glitchId: string) {
-    setError(null)
-    setPending((p) => ({ ...p, [glitchId]: 'FIXED' }))
-    try {
-      await completeQuest({ data: { glitchId } })
-      await onChanged()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not complete the quest')
     } finally {
       setPending(({ [glitchId]: _done, ...rest }) => rest)
     }
@@ -154,8 +132,7 @@ export function QuestBoard({
                       setOver(null)
                     }}
                     onAdvance={canMove && col < 3 ? () => move(g.glitchId, GLITCH_STATUSES[col + 1]) : undefined}
-                    onAccept={accept}
-                    onComplete={complete}
+                    onChanged={onChanged}
                   />
                 ))}
                 {!all.length && (
@@ -189,8 +166,7 @@ function QuestCard({
   onDragStart,
   onDragEnd,
   onAdvance,
-  onAccept,
-  onComplete,
+  onChanged,
 }: {
   glitch: GlitchListItem
   status: GlitchStatus
@@ -202,13 +178,12 @@ function QuestCard({
   onDragStart: (e: DragEvent) => void
   onDragEnd: () => void
   onAdvance?: () => void
-  onAccept: (glitchId: string, accepted: boolean) => void
-  onComplete: (glitchId: string) => void
+  onChanged: () => Promise<void> | void
 }) {
   const slain = status === 'FIXED'
-  const onQuest = g.assignedGuardianIds.includes(me.guardianId)
-  const canAccept = can(me, PERMISSIONS.questAccept) && !slain
-  const rank = questRank(g.locationDanger)
+  const scouting = !g.monsterId
+  // Rank and reward are known once the guild master has set them.
+  const rank = g.rated ? questRank(g.locationDanger) : '?'
 
   return (
     <article
@@ -228,14 +203,14 @@ function QuestCard({
       {/* Seal with the rank, rimmed in gold */}
       <span
         className="absolute -top-3 -right-3 flex size-11 items-center justify-center rounded-full border-2 border-[#C9A24B] font-display text-lg font-bold text-[#FAF7EF] shadow-[0_0_0_1px_#101D38,inset_0_-3px_0_rgb(0_0_0/0.25),0_3px_6px_rgb(0_0_0/0.3)]"
-        style={{ background: SEAL[g.locationDanger - 1] }}
-        title={`Rank ${rank}`}
+        style={{ background: g.rated ? SEAL[g.locationDanger - 1] : '#4A5675' }}
+        title={g.rated ? `Rank ${rank}` : 'Rank not set yet'}
       >
         {rank}
       </span>
 
       <div className="flex items-center justify-between gap-2 pr-6 text-[10px] font-bold tracking-[0.2em] text-[#4A5675] uppercase">
-        <span>Wanted · {g.glitchId}</span>
+        <span>{scouting ? 'Rumour' : 'Wanted'} · {g.glitchId}</span>
       </div>
 
       <Link
@@ -256,10 +231,11 @@ function QuestCard({
       </Link>
 
       <p className="line-clamp-2 text-sm italic">“{g.description}”</p>
+      {scouting && <p className="text-xs font-semibold text-[#1E6F7C]">🏘️ {g.villagerReports} villager reports</p>}
 
       <div className="flex items-center justify-between gap-2 border-t border-dashed border-[#4A5675]/40 pt-2 text-xs">
         <span className="flex items-center gap-1 text-base font-black text-[#8A6A2A]">
-          <Coins className="size-4" /> {g.reward}
+          <Coins className="size-4" /> {g.rated ? g.reward : '?'}
           <span className="text-[10px] font-semibold text-[#4A5675]">gold</span>
         </span>
         <span className="flex items-center gap-1 text-[#2B3D62]" title={`${g.echoCount} sightings`}>
@@ -293,40 +269,15 @@ function QuestCard({
         )}
       </div>
 
-      {(canAccept || onAdvance) && (
-        <div className="flex flex-wrap gap-2">
-          {canAccept && onQuest && (
-            <button
-              type="button"
-              onClick={() => onComplete(g.glitchId)}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border-2 border-[#3F6B4E] bg-[#3F6B4E] px-2 py-1 text-xs font-bold text-[#F4EFE2] hover:bg-[#335A41]"
-            >
-              <Trophy className="size-3.5" /> Complete · claim {g.reward} gold
-            </button>
-          )}
-          {canAccept && (
-            <button
-              type="button"
-              onClick={() => onAccept(g.glitchId, !onQuest)}
-              className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border-2 px-2 py-1 text-xs font-bold ${
-                onQuest
-                  ? 'border-[#4A5675]/40 bg-transparent text-[#2B3D62] hover:bg-[#4A5675]/10'
-                  : 'border-[#101D38] bg-[#101D38] text-[#E9E2CF] hover:bg-[#1A2B4D]'
-              }`}
-            >
-              <Swords className="size-3.5" /> {onQuest ? 'Leave quest' : 'Accept quest'}
-            </button>
-          )}
-          {onAdvance && (
-            <button
-              type="button"
-              onClick={onAdvance}
-              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border-2 border-[#101D38]/50 px-2 py-1 text-xs font-bold text-[#101D38] hover:bg-[#4A5675]/10"
-            >
-              Next step: {STATUS_LABELS[GLITCH_STATUSES[GLITCH_STATUSES.indexOf(status) + 1]]} <ArrowRight className="size-3.5" />
-            </button>
-          )}
-        </div>
+      {!slain && <QuestActions glitch={g} me={me} onChanged={onChanged} />}
+      {onAdvance && !scouting && (
+        <button
+          type="button"
+          onClick={onAdvance}
+          className="inline-flex items-center justify-center gap-1 rounded-md border-2 border-[#101D38]/50 px-2 py-1 text-xs font-bold text-[#101D38] hover:bg-[#4A5675]/10"
+        >
+          Next step: {STATUS_LABELS[GLITCH_STATUSES[GLITCH_STATUSES.indexOf(status) + 1]]} <ArrowRight className="size-3.5" />
+        </button>
       )}
 
       {slain && (

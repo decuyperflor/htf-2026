@@ -47,7 +47,7 @@ export const getLeaderboard = createServerFn({ method: 'GET' }).handler(
         guardianId: guardians.guardianId,
         codename: guardians.codename,
         gold: sql<number>`coalesce(sum(${bounties.gold}), 0)`.as('gold'),
-        slain: count(bounties.glitchId),
+        slain: sql<number>`count(case when ${bounties.kind} = 'slay' then 1 end)`,
       })
       .from(guardians)
       .leftJoin(bounties, eq(bounties.guardianId, guardians.guardianId))
@@ -62,12 +62,13 @@ export const getLeaderboard = createServerFn({ method: 'GET' }).handler(
         .select({
           guardianId: bounties.guardianId,
           monster: sql<number>`max(${monsters.danger})`,
-          place: sql<number>`max(${locations.danger})`,
+          place: sql<number>`max(coalesce(${glitches.danger}, ${locations.danger}))`,
         })
         .from(bounties)
         .innerJoin(glitches, eq(glitches.glitchId, bounties.glitchId))
         .innerJoin(monsters, eq(monsters.monsterId, glitches.monsterId))
         .innerJoin(locations, eq(locations.locationId, glitches.locationId))
+        .where(eq(bounties.kind, 'slay'))
         .groupBy(bounties.guardianId)
         .all()
         .map((r) => [r.guardianId, r]),

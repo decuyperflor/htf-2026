@@ -1,5 +1,6 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Coins, MapPin, Swords, Trash2, Trophy } from 'lucide-react'
+import { QuestActions } from '#/components/quest/QuestActions.tsx'
+import { ArrowLeft, Coins, MapPin, Swords, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { EchoForm } from '#/components/EchoForm.tsx'
 import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
@@ -14,8 +15,6 @@ import {
   deleteGlitch,
   getGlitch,
   getGlitches,
-  completeQuest,
-  setQuestAccepted,
   updateGlitchStatus,
 } from '#/lib/glitches.functions.ts'
 import { getGuardians } from '#/lib/guardians.functions.ts'
@@ -73,28 +72,6 @@ function GlitchPage() {
     }
   }
 
-  async function toggleQuest(accepted: boolean) {
-    setError(null)
-    try {
-      await setQuestAccepted({ data: { glitchId: glitch.glitchId, accepted } })
-      await router.invalidate()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update quest')
-    }
-  }
-
-  async function complete() {
-    setError(null)
-    try {
-      await completeQuest({ data: { glitchId: glitch.glitchId } })
-      await router.invalidate()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not complete the quest')
-    }
-  }
-
-  const onQuest = glitch.assignments.some((a) => a.guardianId === guardian?.guardianId)
-  const canAccept = can(guardian, PERMISSIONS.questAccept) && glitch.status !== 'FIXED'
   const canStatus = can(guardian, PERMISSIONS.glitchUpdateStatus)
   const canAssign = can(guardian, PERMISSIONS.glitchAssign)
   const canDelete = can(guardian, PERMISSIONS.glitchDelete)
@@ -128,10 +105,10 @@ function GlitchPage() {
               <MapPin className="size-4" /> {glitch.locationName} · {glitch.regionName}
             </span>
             <span className="rounded-full bg-[#101D38] px-3 py-1 font-bold text-white">
-              Rank {questRank(glitch.locationDanger)}
+              Rank {glitch.rated ? questRank(glitch.locationDanger) : "?"}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E3C47A]/25 px-3 py-1 font-bold text-[#8A6A2A]">
-              <Coins className="size-4" /> {glitch.reward} gold
+              <Coins className="size-4" /> {glitch.rated ? glitch.reward : "?"} gold
             </span>
           </div>
           <p className="text-sm text-muted">
@@ -178,19 +155,12 @@ function GlitchPage() {
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-fg">Quest party</h2>
-          {canAccept && (
-            <div className="flex flex-wrap gap-2">
-              {onQuest && (
-                <Button onClick={complete} className="!bg-emerald-700 hover:!bg-emerald-800">
-                  <Trophy className="size-4" /> Complete quest · claim {glitch.reward} gold
-                </Button>
-              )}
-              <Button variant={onQuest ? 'secondary' : 'primary'} onClick={() => toggleQuest(!onQuest)}>
-                <Swords className="size-4" /> {onQuest ? 'Leave quest' : 'Accept quest'}
-              </Button>
-            </div>
-          )}
         </div>
+        {guardian && (
+          <div className="max-w-sm">
+            <QuestActions glitch={glitch} me={guardian} onChanged={() => router.invalidate()} />
+          </div>
+        )}
         {canAssign ? (
           <AssignPanel
             glitchId={glitch.glitchId}
@@ -212,7 +182,7 @@ function GlitchPage() {
             <li key={echo.echoId} className="rounded-md border border-line p-4">
               <p className="text-fg">{echo.description}</p>
               <p className="mt-2 text-sm text-muted">
-                {echo.reporterCodename} ·{' '}
+                {echo.reporterCodename ?? `🏘️ ${echo.reporterName ?? 'A villager'}`} ·{' '}
                 <time dateTime={echo.timestamp} suppressHydrationWarning>
                   {formatTimestamp(echo.timestamp)}
                 </time>

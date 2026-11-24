@@ -44,21 +44,28 @@ De hele site ziet eruit als de guild hall: kurk op de muren, een houten sidebar,
 | echo | sighting (observatie) |
 | commander | guild master |
 | defender | adventurer |
-| `LEAKED` / `ASSESSING` / `CONTAINING` / `FIXED` | Spotted / Scouting / Engaged / Slain |
+| `LEAKED` / `ASSESSING` / `CONTAINING` / `FIXED` | Scouting / Spotted / Engaged / Slain |
 
 ### Wereldkaart
 - Het startscherm is een fullscreen kaart van Achrona met regio's (Whispering Woods, Ember Peaks, Mirror Lake, Gloom Marsh, Sunscar Desert, Achrona City), elk met meerdere areas waar monsters gespot worden
 - Slepen = kaart bewegen, scrollen = zoomen; klik op een regio om in te zoomen
-- Klik op een monster: de kaart zoomt in op het gevecht en toont de quest: rank (D–S), beloning in goud, party → **Accept quest** (adventurers)
-- Een adventurer zit op max. één quest tegelijk. Verslagen? Klik **Complete quest · claim … gold** (op de kaart, het quest board of de quest-pagina): het monster is Slain, de hele party int de beloning en je kan een volgende quest nemen
+- Klik op een monster: de kaart zoomt in op het gevecht en toont de quest: rank (D–S), beloning in goud, party en wat je nu kan doen
+- Een adventurer zit op max. één quest tegelijk
 - Filter de kaart op quest rank (D–S) met de **Rank**-knoppen bovenaan
 - Party-leden die online zijn vechten (magische bolts); wie uitgelogd is ligt te slapen naast het monster (online = heartbeat via `sessions.last_seen_at`, < 20 s oud)
 - Het quest board en leaderboard staan op een aparte pagina (**Quest board** in de nav)
-- De guild master klikt op een locatie om danger (rank) en beloning in te stellen
+- De guild master klikt op een lege locatie om de standaard-rank en -beloning van die plek in te stellen
 - Wordt een monster `FIXED` (Slain), dan krijgt elk party-lid de beloning van die locatie → goud + leaderboard
 
+### Quest-workflow: van geruchten tot verslagen monster
+1. **Scouting:** villagers (dorpsbewoners) melden vanzelf vreemde dingen: elke ~20 s komt er een echo binnen van bv. "Maud the baker" ("Een kind is verdwaald bij Firefly Hollow"). Villagers hebben geen account: hun echo heeft een `reporter_name` i.p.v. een `reporting_guardian_id`. Zijn er **3 meldingen op dezelfde plek binnen 10 minuten**, dan ontstaat er een scouting quest (status `LEAKED`) zonder monster: een **?** op de kaart en het quest board. De guild master kan met **Summon villager reports** meteen zo'n quest laten ontstaan (demo)
+2. **Investigate:** een adventurer klikt **Investigate** en vult in welk monster erachter zit (+25 goud scouting-beloning, als bounty van het type `scout`). De quest wordt **Spotted** (`ASSESSING`)
+3. **Rank & reward:** de guild master geeft de quest een rank (D–S) en een beloning (per quest: `glitches.danger` / `glitches.reward`). Pas dan kunnen adventurers accepteren. Wie zelf een monster spot via de kaart, komt meteen hier terecht
+4. **Engaged:** de eerste adventurer die accepteert zet de quest automatisch op `CONTAINING`
+5. **Fight:** de party verslaat het monster met een **code-puzzel**: een stukje code dat variabelen bewerkt, jij geeft de eindwaarde. Hoe hoger de rank, hoe moeilijker (D: + en −, C: ×, B: if/else, A: for-lus met %, S: swap + lus met voorwaarde). De puzzel wordt op de server gemaakt en nagekeken (het antwoord gaat nooit naar de browser). Fout = het monster slaat terug (10 s wachten, nieuwe puzzel). Juist = **Slain**: elk party-lid int de beloning
+
 ### Quest board & workflow
-- **Board (workflow):** het quest board is een houten guild-prikbord met 4 kolommen = de workflow (Spotted → Scouting → Engaged → Slain). Elke quest is een WANTED-poster met wax-zegel (rank), beloning, sightings en party (online/slapend). Adventurers accepteren op de poster; de guild master sleept posters naar de volgende kolom (of klikt **Next step**). Slain toont de laatste 4, de rest staat in de Chronicle. Via **List** krijg je de tabel terug
+- **Board (workflow):** het quest board is een houten guild-prikbord met 4 kolommen = de workflow (Scouting → Spotted → Engaged → Slain). Elke quest is een WANTED-poster (of RUMOUR-poster met een vraagteken zolang het monster onbekend is) met wax-zegel (rank), beloning, sightings en party (online/slapend). Adventurers accepteren op de poster; de guild master sleept posters naar de volgende kolom (of klikt **Next step**). Slain toont de laatste 4, de rest staat in de Chronicle. Via **List** krijg je de tabel terug
 - **Zoek/filters:** zoeken op monster, plaats, beschrijving, adventurer of ID; filteren op status, regio en rank; sorteren op datum, rank, beloning of sightings. Filters staan in de URL (blijven bewaard als je een quest opent en terugkeert)
 - **Chronicle (PDF):** `/chronicle` is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
 - **Sneltoetsen:** druk op `?` voor het overzicht (o.a. `m` kaart, `q` quest board, `/` zoeken, `j`/`k` volgende/vorige quest, `d` dark mode)
@@ -73,10 +80,10 @@ De hele site ziet eruit als de guild hall: kurk op de muren, een houten sidebar,
 - `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token) + `last_seen_at` voor online-status
 - `monsters`: de monster-index (bestiarium), met `danger` 1–5
 - `regions` ← `locations` (x/y op de kaart, `danger` 1–5 en `reward` in goud, door de guild master)
-- `glitches` → `monster_id`, `location_id`; `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)
+- `glitches` → `monster_id` (leeg zolang het een scouting quest is), `location_id`, `danger` + `reward` (door de guild master); `glitches` ← `echoes` (`glitch_id`, `location_id`, `reporting_guardian_id` óf `reporter_name` voor een villager; een losse villager-melding heeft nog geen `glitch_id`)
 - `glitch_assignments`: de quest-party (zelf geaccepteerd of door de guild master gestuurd)
-- `bounties`: uitbetaald goud per (glitch, adventurer) wanneer een monster verslagen is
-- Een nieuwe echo zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `LEAKED`) van het gekozen monstertype op de gekozen locatie
+- `bounties`: uitbetaald goud per (glitch, adventurer, soort): `slay` voor de party als het monster verslagen is, `scout` voor wie het monster identificeerde
+- Een echo van een guardian zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `ASSESSING` = Spotted) van het gekozen monstertype op de gekozen locatie
 - Grootte van een monster = `danger` van het monstertype + groei per extra echo
 
 ## Beoordeling

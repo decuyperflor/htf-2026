@@ -22,10 +22,10 @@ export function activeQuestOf(tx: Tx, guardianId: number, exceptGlitchId: string
   return row?.glitchId ?? null
 }
 
-/** The monster is slain: everyone on the quest gets the location's reward (once). Returns that reward. */
+/** The monster is slain: everyone on the quest gets the quest's reward (once). Returns that reward. */
 export function payBounties(tx: Tx, glitchId: string) {
   const { reward } = tx
-    .select({ reward: locations.reward })
+    .select({ reward: sql<number>`coalesce(${glitches.reward}, ${locations.reward})` })
     .from(glitches)
     .innerJoin(locations, eq(locations.locationId, glitches.locationId))
     .where(eq(glitches.glitchId, glitchId))
@@ -38,7 +38,7 @@ export function payBounties(tx: Tx, glitchId: string) {
   if (party.length) {
     const paidAt = new Date().toISOString()
     tx.insert(bounties)
-      .values(party.map((p) => ({ glitchId, guardianId: p.guardianId, gold: reward, paidAt })))
+      .values(party.map((p) => ({ glitchId, guardianId: p.guardianId, kind: 'slay' as const, gold: reward, paidAt })))
       .onConflictDoNothing()
       .run()
   }
