@@ -26,7 +26,7 @@ export function QuestPanel({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const onQuest = glitch.assignedGuardianIds.includes(me.guardianId)
-  const names = new Map(guardians.map((g) => [g.guardianId, g.codename]))
+  const byId = new Map(guardians.map((g) => [g.guardianId, g]))
   const slain = glitch.status === 'FIXED'
 
   async function toggle() {
@@ -85,9 +85,19 @@ export function QuestPanel({
         </div>
         <div className="col-span-2 rounded-xl bg-white p-2.5 ring-1 ring-[#2b2340]/15">
           <dt className="text-xs text-[#2b2340]/60">Party ({glitch.assignedGuardianIds.length})</dt>
-          <dd className="font-semibold">
+          <dd className="flex flex-col gap-1 font-semibold">
             {glitch.assignedGuardianIds.length
-              ? glitch.assignedGuardianIds.map((id) => names.get(id) ?? `#${id}`).join(', ')
+              ? glitch.assignedGuardianIds.map((id) => {
+                  const g = byId.get(id)
+                  return (
+                    <span key={id} className="flex items-center justify-between gap-2">
+                      {g?.codename ?? `#${id}`}
+                      <span className={`text-xs font-medium ${g?.online ? 'text-emerald-700' : 'text-[#6f5a99]'}`}>
+                        {g?.online ? '⚔️ fighting' : '💤 asleep (offline)'}
+                      </span>
+                    </span>
+                  )
+                })
               : 'Nobody yet – be the first!'}
           </dd>
         </div>

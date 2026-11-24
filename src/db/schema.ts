@@ -52,6 +52,8 @@ export const sessions = sqliteTable(
     createdAt: text('created_at').notNull(),
     /** ISO 8601 */
     expiresAt: text('expires_at').notNull(),
+    /** ISO 8601; refreshed while the guardian's browser polls, so we know who is online. */
+    lastSeenAt: text('last_seen_at'),
   },
   (t) => [index('sessions_guardian_idx').on(t.guardianId)],
 )

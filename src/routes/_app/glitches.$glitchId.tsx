@@ -80,8 +80,8 @@ function GlitchPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-8">
-      <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
-        <ArrowLeft className="size-4" /> Guild hall
+      <Link to="/quests" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+        <ArrowLeft className="size-4" /> Quest board
       </Link>
 
       <div className="flex flex-wrap items-start gap-5">

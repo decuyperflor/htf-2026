@@ -28,6 +28,7 @@ export function createSession(guardianId: number) {
       guardianId,
       createdAt: now.toISOString(),
       expiresAt: expires.toISOString(),
+      lastSeenAt: now.toISOString(),
     })
     .run()
 
@@ -51,8 +52,11 @@ export function getSessionGuardian(): SessionGuardian | null {
   const token = getCookie(SESSION_COOKIE)
   if (!token) return null
 
+  const sessionId = hashToken(token)
+  const now = new Date()
   const row = db
     .select({
+      lastSeenAt: sessions.lastSeenAt,
       guardianId: guardians.guardianId,
       codename: guardians.codename,
       roleId: roles.roleId,
@@ -63,12 +67,17 @@ export function getSessionGuardian(): SessionGuardian | null {
     .innerJoin(roles, eq(roles.roleId, guardians.roleId))
     .where(
       and(
-        eq(sessions.sessionId, hashToken(token)),
-        gt(sessions.expiresAt, new Date().toISOString()),
+        eq(sessions.sessionId, sessionId),
+        gt(sessions.expiresAt, now.toISOString()),
       ),
     )
     .get()
   if (!row) return null
+
+  // Presence: every request is a heartbeat (written at most every few seconds).
+  if (!row.lastSeenAt || now.getTime() - Date.parse(row.lastSeenAt) > 5000) {
+    db.update(sessions).set({ lastSeenAt: now.toISOString() }).where(eq(sessions.sessionId, sessionId)).run()
+  }
 
   const perms = db
     .select({ permissionId: rolePermissions.permissionId })
@@ -82,7 +91,8 @@ export function getSessionGuardian(): SessionGuardian | null {
     .where(eq(bounties.guardianId, row.guardianId))
     .get()!
 
-  return { ...row, permissions: perms.map((p) => p.permissionId as Permission), gold }
+  const { lastSeenAt: _seen, ...guardian } = row
+  return { ...guardian, permissions: perms.map((p) => p.permissionId as Permission), gold }
 }
 
 /** Throws unless someone is logged in and (optionally) has the permission. */

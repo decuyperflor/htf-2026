@@ -35,9 +35,10 @@ const permissionRows: (typeof permissions.$inferInsert)[] = [
 ]
 
 const defenderPermissions = ['glitch:view', 'echo:create', 'quest:accept']
-// A commander can do everything a defender can, plus admin rights.
+// A commander can do everything a defender can (except fight: the guild master sends
+// adventurers out instead of accepting quests), plus admin rights.
 const commanderPermissions = [
-  ...defenderPermissions,
+  ...defenderPermissions.filter((p) => p !== 'quest:accept'),
   'glitch:update_status',
   'glitch:assign',
   'glitch:delete',
@@ -71,19 +72,26 @@ const locationRows: (typeof locations.$inferInsert)[] = [
   { locationId: 'elder-tree', regionId: 'forest', name: 'Elder Tree', x: 180, y: 130, danger: 2, reward: 120 },
   { locationId: 'fox-hollow', regionId: 'forest', name: 'Fox Hollow', x: 310, y: 200, danger: 1, reward: 60 },
   { locationId: 'moss-ruins', regionId: 'forest', name: 'Moss Ruins', x: 130, y: 230, danger: 3, reward: 200 },
+  { locationId: 'mushroom-ring', regionId: 'forest', name: 'Mushroom Ring', x: 345, y: 110, danger: 1, reward: 70 },
   { locationId: 'crater-rim', regionId: 'peaks', name: 'Crater Rim', x: 820, y: 110, danger: 5, reward: 800 },
   { locationId: 'frost-pass', regionId: 'peaks', name: 'Frost Pass', x: 680, y: 150, danger: 3, reward: 250 },
   { locationId: 'dragons-perch', regionId: 'peaks', name: "Dragon's Perch", x: 860, y: 230, danger: 4, reward: 500 },
+  { locationId: 'crystal-mine', regionId: 'peaks', name: 'Crystal Mine', x: 655, y: 235, danger: 2, reward: 160 },
   { locationId: 'old-pier', regionId: 'lake', name: 'Old Pier', x: 150, y: 350, danger: 1, reward: 50 },
   { locationId: 'lily-isle', regionId: 'lake', name: 'Lily Isle', x: 240, y: 430, danger: 2, reward: 110 },
   { locationId: 'waterfall-cave', regionId: 'lake', name: 'Waterfall Cave', x: 120, y: 500, danger: 3, reward: 220 },
+  { locationId: 'fishers-cove', regionId: 'lake', name: "Fisher's Cove", x: 295, y: 520, danger: 1, reward: 60 },
   { locationId: 'witch-hut', regionId: 'marsh', name: "Witch's Hut", x: 420, y: 430, danger: 4, reward: 450 },
   { locationId: 'sunken-shrine', regionId: 'marsh', name: 'Sunken Shrine', x: 560, y: 450, danger: 3, reward: 260 },
   { locationId: 'bog-bridge', regionId: 'marsh', name: 'Bog Bridge', x: 480, y: 530, danger: 2, reward: 100 },
+  { locationId: 'firefly-hollow', regionId: 'marsh', name: 'Firefly Hollow', x: 370, y: 485, danger: 2, reward: 120 },
   { locationId: 'oasis', regionId: 'desert', name: 'Oasis', x: 720, y: 360, danger: 1, reward: 70 },
   { locationId: 'buried-temple', regionId: 'desert', name: 'Buried Temple', x: 850, y: 420, danger: 4, reward: 520 },
   { locationId: 'glass-dunes', regionId: 'desert', name: 'Glass Dunes', x: 760, y: 510, danger: 2, reward: 140 },
+  { locationId: 'scorpion-canyon', regionId: 'desert', name: 'Scorpion Canyon', x: 900, y: 485, danger: 3, reward: 300 },
   { locationId: 'guild-gate', regionId: 'city', name: 'Guild Gate', x: 500, y: 330, danger: 1, reward: 50 },
+  { locationId: 'market-square', regionId: 'city', name: 'Market Square', x: 440, y: 262, danger: 1, reward: 40 },
+  { locationId: 'castle-gardens', regionId: 'city', name: 'Castle Gardens', x: 565, y: 300, danger: 1, reward: 50 },
 ]
 
 // ---------- Demo guardians (test accounts, local only) ----------
@@ -124,6 +132,7 @@ const echoRows: [string, string, string, string][] = [
 // [glitchId, adventurer codename] — sent out by the guild master.
 const assignmentRows: [string, string][] = [
   ['GL-0139', 'ember'],
+  ['GL-0142', 'kael'],
   ['GL-0137', 'kael'],
 ]
 

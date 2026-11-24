@@ -43,15 +43,18 @@ In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-the
 | `LEAKED` / `ASSESSING` / `CONTAINING` / `FIXED` | Spotted / Scouting / Engaged / Slain |
 
 ### Wereldkaart
-- Het dashboard is een kaart van Achrona met regio's (Whispering Woods, Ember Peaks, Mirror Lake, Gloom Marsh, Sunscar Desert, Achrona City)
-- Klik op een regio om in te zoomen: je ziet de monsters op hun locatie
-- Klik op een monster voor de quest: rank (D–S), beloning in goud, party → **Accept quest** (adventurers)
+- Het startscherm is een fullscreen kaart van Achrona met regio's (Whispering Woods, Ember Peaks, Mirror Lake, Gloom Marsh, Sunscar Desert, Achrona City), elk met meerdere areas waar monsters gespot worden
+- Slepen = kaart bewegen, scrollen = zoomen; klik op een regio om in te zoomen
+- Klik op een monster: de kaart zoomt in op het gevecht en toont de quest: rank (D–S), beloning in goud, party → **Accept quest** (adventurers)
+- Een adventurer zit op max. één quest tegelijk
+- Party-leden die online zijn vechten (magische bolts); wie uitgelogd is ligt te slapen naast het monster (online = heartbeat via `sessions.last_seen_at`, < 20 s oud)
+- Het quest board en leaderboard staan op een aparte pagina (**Quest board** in de nav)
 - De guild master klikt op een locatie om danger (rank) en beloning in te stellen
 - Wordt een monster `FIXED` (Slain), dan krijgt elk party-lid de beloning van die locatie → goud + leaderboard
 
 ### Datamodel
 - `guardians` → `role_id` → `roles`; rechten per rol via `role_permissions` → `permissions`
-- `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token)
+- `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token) + `last_seen_at` voor online-status
 - `monsters`: de monster-index (bestiarium), met `danger` 1–5
 - `regions` ← `locations` (x/y op de kaart, `danger` 1–5 en `reward` in goud, door de guild master)
 - `glitches` → `monster_id`, `location_id`; `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)

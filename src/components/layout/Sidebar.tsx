@@ -1,18 +1,19 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Activity, BookOpen, Castle, Coins, Eye, LogOut, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpen, Coins, Eye, LogOut, Map as MapIcon, ScrollText, type LucideIcon } from 'lucide-react'
 import { PERMISSIONS, can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
 import { logout } from '#/lib/auth.functions.ts'
 
 type NavItem = {
   label: string
   icon: LucideIcon
-  to: '/' | '/report' | '/bestiary'
+  to: '/' | '/quests' | '/report' | '/bestiary'
   /** Only shown when the guardian has this permission. */
   permission?: Permission
 }
 
 const navItems: NavItem[] = [
-  { label: 'Guild hall', icon: Castle, to: '/' },
+  { label: 'World map', icon: MapIcon, to: '/' },
+  { label: 'Quest board', icon: ScrollText, to: '/quests' },
   { label: 'Spot a monster', icon: Eye, to: '/report', permission: PERMISSIONS.echoCreate },
   { label: 'Bestiary', icon: BookOpen, to: '/bestiary' },
 ]

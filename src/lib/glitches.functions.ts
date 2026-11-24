@@ -19,6 +19,7 @@ import {
   type GlitchListItem,
   type GlitchStatus,
 } from '#/lib/glitch.ts'
+import { activeQuestOf } from '#/server/quests.ts'
 import { requireGuardian } from '#/server/session.ts'
 
 const MAX_DESCRIPTION = 1000
@@ -235,6 +236,8 @@ export const setQuestAccepted = createServerFn({ method: 'POST' })
       if (glitch.status === 'FIXED') throw new Error('This monster has already been slain')
 
       if (data.accepted) {
+        const busy = activeQuestOf(tx, adventurer.guardianId, data.glitchId)
+        if (busy) throw new Error(`You're already on quest ${busy}. Leave that quest first – one monster at a time!`)
         tx.insert(glitchAssignments)
           .values({
             glitchId: data.glitchId,
@@ -290,6 +293,14 @@ export const assignAdventurers = createServerFn({ method: 'POST' })
         .where(eq(glitchAssignments.glitchId, data.glitchId))
         .all()
         .map((a) => a.guardianId)
+
+      for (const guardianId of data.guardianIds.filter((id) => !current.includes(id))) {
+        const busy = activeQuestOf(tx, guardianId, data.glitchId)
+        if (busy) {
+          const who = tx.select({ codename: guardians.codename }).from(guardians).where(eq(guardians.guardianId, guardianId)).get()
+          throw new Error(`${who?.codename ?? 'That adventurer'} is already on quest ${busy} – one monster at a time`)
+        }
+      }
 
       const toRemove = current.filter((id) => !data.guardianIds.includes(id))
       const toAdd = data.guardianIds.filter((id) => !current.includes(id))
