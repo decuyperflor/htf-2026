@@ -1,5 +1,6 @@
 import { Swords, Trophy, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { MonsterIcon } from '#/components/MonsterIcon.tsx'
 import { questRank, type GlitchListItem } from '#/lib/glitch.ts'
 import { answerFightPuzzle, getFightPuzzle, type FightPuzzle } from '#/lib/glitches.functions.ts'
@@ -80,7 +81,9 @@ export function FightDialog({
     }
   }
 
-  return (
+  // Portal to <body>: a hovered quest poster is transformed, which would trap a fixed child
+  // inside it (the dialog jumps when the poster loses hover, and flickers).
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" onClick={onClose} role="presentation">
       <div
         role="dialog"
@@ -174,6 +177,7 @@ export function FightDialog({
           </p>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
