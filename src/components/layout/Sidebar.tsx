@@ -1,5 +1,6 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Activity, BookOpen, Coins, Eye, FileText, Keyboard, LogOut, Map as MapIcon, Moon, ScrollText, Sun, type LucideIcon } from 'lucide-react'
+import { GuildEmblem } from '#/components/GuildEmblem.tsx'
+import { BookOpen, Coins, Eye, FileText, Keyboard, LogOut, Map as MapIcon, Moon, ScrollText, Sun, type LucideIcon } from 'lucide-react'
 import { PERMISSIONS, can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
 import { logout } from '#/lib/auth.functions.ts'
 import type { Theme } from '#/lib/theme.ts'
@@ -46,9 +47,9 @@ export function Sidebar({
 
   return (
     <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar wood py-5 transition-colors print:hidden">
-      <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-accent-from to-accent-to text-white shadow-md shadow-black/30">
-        <Activity className="size-7" strokeWidth={2} />
-      </div>
+      <Link to="/" aria-label="Guardians of the Grid – world map" className="mb-6 block drop-shadow-[0_3px_4px_rgb(0_0_0/0.45)]">
+        <GuildEmblem className="h-14 w-12" />
+      </Link>
 
       <nav className="flex w-full flex-1 flex-col items-center gap-1">
         {navItems

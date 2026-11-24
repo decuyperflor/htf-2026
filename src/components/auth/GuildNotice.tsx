@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Shield } from 'lucide-react'
+import { GuildEmblem } from '#/components/GuildEmblem.tsx'
 import type { FormEvent, InputHTMLAttributes, ReactNode } from 'react'
 
 /**
@@ -33,9 +34,11 @@ export function GuildNotice({
             className="absolute -top-2 left-1/2 size-5 -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff8a8a,#b3261e)] shadow-[0_3px_4px_rgb(0_0_0/0.4)]"
           />
           <div className="flex flex-col items-center gap-1.5 text-center">
-            <p className="font-display text-xs font-bold tracking-[0.3em] text-[#7a5a2e] uppercase">
-              Guild of Achrona
+            <GuildEmblem className="mb-1 h-28 w-24 drop-shadow-[0_4px_6px_rgb(40_20_0/0.35)]" />
+            <p className="font-display text-sm font-bold tracking-[0.25em] text-[#101D38] uppercase">
+              Guardians of the Grid
             </p>
+            <p className="text-[11px] font-semibold tracking-[0.3em] text-[#B3263E] uppercase">Achrona Guild</p>
             <h1 className="text-2xl font-extrabold text-[#2b1d0e]">{title}</h1>
             <p className="text-sm text-[#6b4e26]">{subtitle}</p>
           </div>
