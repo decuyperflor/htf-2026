@@ -63,6 +63,9 @@ De hele site ziet eruit als de guild hall: kurk op de muren, een houten sidebar,
 - **Chronicle (PDF):** `/chronicle` is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
 - **Sneltoetsen:** druk op `?` voor het overzicht (o.a. `m` kaart, `q` quest board, `/` zoeken, `j`/`k` volgende/vorige quest, `d` dark mode)
 - **Dark mode:** knop in de sidebar of `d`; onthouden per browser. Op de kaart valt de nacht
+- **Magie van Achrona (gauge):** een meter op de kaart en het quest board: 100% zonder monsters; elk monster dat loose is trekt magie weg (meer voor een sterker monster en een hogere rank), verslaan geeft ze terug
+- **Offline:** valt de verbinding met de server weg, dan blijft de laatste stand staan met een "Offline"-melding onderaan; zodra de server terug antwoordt verdwijnt die
+- **Badges op het leaderboard:** 👑 Guild Treasurer, 🐉 Dragon Slayer, ⚔️ Giant Slayer, 🛡️ Veteran, 🗡️ First Blood, 👁️ Eagle Eye (hover voor uitleg)
 - **Lockdown mode:** zolang er een S-klasse dreiging loose is (monster met gevaar 5 of een monster op een rank-S locatie) kleurt de app rood met een alarmbanner. Verslaan = lockdown voorbij. **View quest** in de alarmbanner vliegt op de kaart naar het gevecht; met **Decline – too strong** weiger je een quest die te zwaar is en stopt het alarm voor jou (per account, in deze browser)
 
 ### Datamodel

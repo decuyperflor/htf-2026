@@ -5,7 +5,9 @@ import { Soldier, staffTip } from '#/components/battlefield/Soldier.tsx'
 import { DEATH_MS, SHOOT_MS, clamp01, sizeFor } from '#/components/battlefield/geometry.ts'
 import type { GlitchSim, SoldierPos } from '#/components/battlefield/types.ts'
 import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
+import { MagicGauge } from '#/components/MagicGauge.tsx'
 import { questRank, type GlitchListItem, type Monster, type World } from '#/lib/glitch.ts'
+import { magicLevel } from '#/lib/magic.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 import { LocationPanel } from './LocationPanel.tsx'
 import { QuestPanel } from './QuestPanel.tsx'
@@ -624,12 +626,16 @@ export function WorldMap({
         </button>
       </div>
 
-      {!selected && !selectedLoc && !spotAt && (
-        <p className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-[#fffaf0]/90 px-3 py-1 text-xs font-medium text-[#2b2340]">
-          Drag to move · scroll to zoom · click a region or monster
-          {manage ? ' · click an area to set danger & reward' : spot ? ' · click an area to spot a monster there' : ''}
-        </p>
-      )}
+      <div className="pointer-events-none absolute bottom-4 left-4 flex flex-col items-start gap-2" data-panel>
+        {/* All monsters count, whatever the rank filter shows. */}
+        <MagicGauge level={magicLevel(glitches)} />
+        {!selected && !selectedLoc && !spotAt && (
+          <p className="rounded-full bg-[#fffaf0]/90 px-3 py-1 text-xs font-medium text-[#2b2340]">
+            Drag to move · scroll to zoom · click a region or monster
+            {manage ? ' · click an area to set danger & reward' : spot ? ' · click an area to spot a monster there' : ''}
+          </p>
+        )}
+      </div>
 
       {selected && (
         <div data-panel>

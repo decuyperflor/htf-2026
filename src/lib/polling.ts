@@ -1,5 +1,5 @@
 import { useRouter } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 /** How often live pages ask the server for the latest state. */
 export const POLL_MS = 3000
@@ -37,9 +37,42 @@ export function resilient<T>(load: () => Promise<T>): () => Promise<T> {
     if (typeof window === 'undefined') return load()
     try {
       lastGood = await load()
+      setOffline(false)
     } catch (err) {
+      setOffline(true)
       if (lastGood === null) throw err
     }
     return lastGood
   }
+}
+
+// ---------- Connection state: offline as soon as a poll fails, back online with the next success ----------
+
+let offline = false
+const listeners = new Set<() => void>()
+
+function setOffline(value: boolean) {
+  if (offline === value) return
+  offline = value
+  for (const listener of listeners) listener()
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  // The browser knows about a dropped network before any poll fails.
+  const down = () => setOffline(true)
+  window.addEventListener('offline', down)
+  return () => {
+    listeners.delete(listener)
+    window.removeEventListener('offline', down)
+  }
+}
+
+/** True while the guild hall (server) can't be reached; the page keeps showing the last known data. */
+export function useOffline() {
+  return useSyncExternalStore(
+    subscribe,
+    () => offline,
+    () => false,
+  )
 }

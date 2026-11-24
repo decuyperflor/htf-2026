@@ -1,10 +1,10 @@
 import { Link, Outlet, createFileRoute, redirect, useRouter, useRouterState } from '@tanstack/react-router'
-import { ShieldOff, Siren, X } from 'lucide-react'
+import { ShieldOff, Siren, WifiOff, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar } from '#/components/layout/Sidebar.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { getThreats } from '#/lib/glitches.functions.ts'
-import { resilient } from '#/lib/polling.ts'
+import { resilient, useOffline } from '#/lib/polling.ts'
 import { SHORTCUTS, useShortcuts } from '#/lib/shortcuts.ts'
 import { useTheme } from '#/lib/theme.ts'
 
@@ -26,6 +26,7 @@ function AppLayout() {
   const router = useRouter()
   const { theme, toggle } = useTheme()
   const [help, setHelp] = useState(false)
+  const offline = useOffline()
   // An adventurer may decline a quest that is too strong for them: that threat no
   // longer sounds the alarm for them (remembered per guardian, in this browser).
   const declineKey = `achrona-declined-${guardian.guardianId}`
@@ -123,6 +124,16 @@ function AppLayout() {
             </button>
           </div>
         </>
+      )}
+
+      {offline && (
+        <div
+          role="status"
+          className="print-hidden fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border-2 border-[#2b1d0e] bg-[#3b2412] py-1.5 pr-4 pl-3 text-sm font-semibold text-[#f6e7c8] shadow-lg"
+        >
+          <WifiOff className="size-4 shrink-0 text-[#ff9a5c]" />
+          Offline – lost contact with the guild hall. Showing the last known state, reconnecting…
+        </div>
       )}
 
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}

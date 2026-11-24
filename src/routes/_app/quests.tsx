@@ -1,4 +1,6 @@
 import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { MagicGauge } from '#/components/MagicGauge.tsx'
+import { magicLevel } from '#/lib/magic.ts'
 import { Coins, Eye, KanbanSquare, List, ScrollText, Search, Trophy, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
@@ -131,7 +133,10 @@ function QuestBoardPage() {
     <div className="grid gap-8 2xl:grid-cols-[1fr_18rem]">
       <section className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-3xl font-semibold text-fg">Quest board</h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <h1 className="text-3xl font-semibold text-fg">Quest board</h1>
+            <MagicGauge level={magicLevel(glitches)} className="py-1" />
+          </div>
           <div className="flex flex-wrap gap-2">
             <Link
               to="/chronicle"
@@ -299,6 +304,16 @@ function QuestBoardPage() {
                     title={online ? 'Online' : 'Offline'}
                   />
                   {row.codename}
+                  {row.badges.map((b) => (
+                    <span
+                      key={b.id}
+                      title={`${b.label} – ${b.why}`}
+                      aria-label={b.label}
+                      className="cursor-help text-base leading-none"
+                    >
+                      {b.icon}
+                    </span>
+                  ))}
                 </span>
                 <span className="text-xs text-muted">{row.slain} slain</span>
                 <span className="flex items-center gap-1 font-bold text-[#b8862f]">

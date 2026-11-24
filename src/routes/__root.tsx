@@ -7,13 +7,17 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { getSession } from '#/lib/auth.functions.ts'
+import { resilient } from '#/lib/polling.ts'
 import { THEME_BOOT_SCRIPT } from '#/lib/theme.ts'
 
 import appCss from '../styles.css?url'
 
+const loadSession = resilient(() => getSession())
+
 export const Route = createRootRoute({
   // Every route below can read `context.guardian` (null when logged out).
-  beforeLoad: async () => ({ guardian: await getSession() }),
+  // Resilient: a poll while the server is unreachable keeps the session we had.
+  beforeLoad: async () => ({ guardian: await loadSession() }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
