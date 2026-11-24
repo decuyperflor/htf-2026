@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { WorldMap } from '#/components/world/WorldMap.tsx'
 import { getGlitches } from '#/lib/glitches.functions.ts'
 import { getGuardians } from '#/lib/guardians.functions.ts'
+import { getMonsters } from '#/lib/monsters.functions.ts'
 import { POLL_MS, resilient, usePolling } from '#/lib/polling.ts'
 import { getWorld } from '#/lib/world.functions.ts'
 
@@ -11,8 +12,8 @@ export const Route = createFileRoute('/_app/')({
   validateSearch: (search: Record<string, unknown>): { quest?: string } =>
     typeof search.quest === 'string' ? { quest: search.quest } : {},
   loader: resilient(async () => {
-    const [glitches, guardians, world] = await Promise.all([getGlitches(), getGuardians(), getWorld()])
-    return { glitches, guardians, world }
+    const [glitches, guardians, world, monsters] = await Promise.all([getGlitches(), getGuardians(), getWorld(), getMonsters()])
+    return { glitches, guardians, world, monsters }
   }),
   component: MapPage,
   // A failed first load (server restart) must not kill the page: keep retrying.
@@ -38,7 +39,7 @@ function ReconnectingNotice() {
 }
 
 function MapPage() {
-  const { glitches, guardians, world } = Route.useLoaderData()
+  const { glitches, guardians, world, monsters } = Route.useLoaderData()
   const { guardian } = Route.useRouteContext()
   const { quest } = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -51,6 +52,7 @@ function MapPage() {
         glitches={glitches}
         guardians={guardians}
         world={world}
+        monsters={monsters}
         me={guardian}
         onChanged={() => router.invalidate()}
         focusGlitchId={quest}

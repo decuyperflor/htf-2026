@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Minus, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { GlitchSprite } from '#/components/battlefield/GlitchSprite.tsx'
@@ -6,10 +5,11 @@ import { Soldier, staffTip } from '#/components/battlefield/Soldier.tsx'
 import { DEATH_MS, SHOOT_MS, clamp01, sizeFor } from '#/components/battlefield/geometry.ts'
 import type { GlitchSim, SoldierPos } from '#/components/battlefield/types.ts'
 import { PERMISSIONS, can, type SessionGuardian } from '#/lib/auth.ts'
-import { questRank, type GlitchListItem, type World } from '#/lib/glitch.ts'
+import { questRank, type GlitchListItem, type Monster, type World } from '#/lib/glitch.ts'
 import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 import { LocationPanel } from './LocationPanel.tsx'
 import { QuestPanel } from './QuestPanel.tsx'
+import { SpotPanel } from './SpotPanel.tsx'
 import { MAP_H, MAP_W, REGION_ART, bounds } from './regions.ts'
 import { RegionLabels, WorldArt, WorldFx } from './WorldArt.tsx'
 
@@ -54,6 +54,7 @@ export function WorldMap({
   glitches,
   guardians,
   world,
+  monsters,
   me,
   onChanged,
   focusGlitchId,
@@ -62,6 +63,7 @@ export function WorldMap({
   glitches: GlitchListItem[]
   guardians: GuardianSummary[]
   world: World
+  monsters: Monster[]
   me: SessionGuardian
   onChanged: () => Promise<void> | void
   /** Fly straight to this quest once it is on the map (e.g. from the lockdown alert). */
@@ -69,7 +71,10 @@ export function WorldMap({
   onFocused?: () => void
 }) {
   const [region, setRegion] = useState<string | null>(null)
-  const navigate = useNavigate()
+  /** Area where the spot-a-monster card is open. */
+  const [spotAt, setSpotAt] = useState<string | null>(null)
+  /** A monster we just reported: open its quest once it is on the map. */
+  const [justSpotted, setJustSpotted] = useState<string | null>(null)
   /** Which quest ranks (location danger 1–5) are shown. */
   const [ranks, setRanks] = useState<number[]>([1, 2, 3, 4, 5])
   const [selectedGlitch, setSelectedGlitch] = useState<string | null>(null)
@@ -330,6 +335,7 @@ export function WorldMap({
   const names = Object.fromEntries(world.regions.map((r) => [r.regionId, r.name]))
   const selected = glitches.find((g) => g.glitchId === selectedGlitch) ?? null
   const selectedLoc = selectedLocation ? (locationById.get(selectedLocation) ?? null) : null
+  const spotLoc = spotAt ? (locationById.get(spotAt) ?? null) : null
   const manage = can(me, PERMISSIONS.locationManage)
   const spot = can(me, PERMISSIONS.echoCreate)
   const clickArea = manage || spot
@@ -339,10 +345,12 @@ export function WorldMap({
   /** Guild master: area settings (with a spot link). Adventurers: spot a monster right there. */
   function openArea(locationId: string) {
     if (manage) {
+      setSpotAt(null)
       setSelectedGlitch(null)
       setSelectedLocation(locationId)
     } else {
-      navigate({ to: '/report', search: { location: locationId } })
+      setSelectedGlitch(null)
+      setSpotAt(locationId)
     }
   }
 
@@ -357,6 +365,7 @@ export function WorldMap({
     const b = fit({ x: mx - partyW - 50, y: my - 45, w, h: 90 }, aspect.current)
     b.x += b.w * 0.17
     setSelectedLocation(null)
+    setSpotAt(null)
     setSelectedGlitch(sim.id)
     setRegion(sim.regionId)
     flyTo(b)
@@ -365,6 +374,7 @@ export function WorldMap({
   function zoomTo(regionId: string | null) {
     setSelectedGlitch(null)
     setSelectedLocation(null)
+    setSpotAt(null)
     setRegion(regionId)
     flyTo(regionId ? regionBox(regionId) : FULL)
   }
@@ -372,10 +382,12 @@ export function WorldMap({
   // Coming from elsewhere (lockdown alert): open that quest as soon as its monster is on the map.
   const focused = useRef<string | null>(null)
   useEffect(() => {
-    if (!focusGlitchId || focused.current === focusGlitchId) return
-    const sim = sims.current.get(focusGlitchId)
+    const id = focusGlitchId ?? justSpotted
+    if (!id || focused.current === id) return
+    const sim = sims.current.get(id)
     if (!sim) return
-    focused.current = focusGlitchId
+    focused.current = id
+    if (id === justSpotted) setJustSpotted(null)
     const loc = locationById.get(sim.locationId)
     if (loc && !ranks.includes(loc.danger)) setRanks((r) => [...r, loc.danger])
     openQuest(sim)
@@ -612,7 +624,7 @@ export function WorldMap({
         </button>
       </div>
 
-      {!selected && !selectedLoc && (
+      {!selected && !selectedLoc && !spotAt && (
         <p className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-[#fffaf0]/90 px-3 py-1 text-xs font-medium text-[#2b2340]">
           Drag to move · scroll to zoom · click a region or monster
           {manage ? ' · click an area to set danger & reward' : spot ? ' · click an area to spot a monster there' : ''}
@@ -626,7 +638,32 @@ export function WorldMap({
       )}
       {selectedLoc && (
         <div data-panel>
-          <LocationPanel key={selectedLoc.locationId} location={selectedLoc} onClose={() => setSelectedLocation(null)} onChanged={onChanged} />
+          <LocationPanel
+            key={selectedLoc.locationId}
+            location={selectedLoc}
+            onClose={() => setSelectedLocation(null)}
+            onChanged={onChanged}
+            onSpot={spot ? () => {
+              setSelectedLocation(null)
+              setSpotAt(selectedLoc.locationId)
+            } : undefined}
+          />
+        </div>
+      )}
+      {spotLoc && (
+        <div data-panel>
+          <SpotPanel
+            key={spotLoc.locationId}
+            location={spotLoc}
+            regionName={names[spotLoc.regionId] ?? ''}
+            monsters={monsters}
+            onClose={() => setSpotAt(null)}
+            onSpotted={async (glitchId) => {
+              await onChanged()
+              setSpotAt(null)
+              setJustSpotted(glitchId)
+            }}
+          />
         </div>
       )}
     </div>

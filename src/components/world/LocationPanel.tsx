@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { Eye, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '#/components/ui/Button.tsx'
@@ -10,10 +9,13 @@ export function LocationPanel({
   location,
   onClose,
   onChanged,
+  onSpot,
 }: {
   location: Location
   onClose: () => void
   onChanged: () => Promise<void> | void
+  /** Open the spot-a-monster card for this area. */
+  onSpot?: () => void
 }) {
   const [danger, setDanger] = useState(location.danger)
   const [reward, setReward] = useState(location.reward)
@@ -87,13 +89,15 @@ export function LocationPanel({
         <Button type="submit" disabled={pending}>
           {pending ? 'Saving…' : 'Save'}
         </Button>
-        <Link
-          to="/report"
-          search={{ location: location.locationId }}
-          className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-accent hover:underline"
-        >
-          <Eye className="size-4" /> Spot a monster here
-        </Link>
+        {onSpot && (
+          <button
+            type="button"
+            onClick={onSpot}
+            className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-accent hover:underline"
+          >
+            <Eye className="size-4" /> Spot a monster here
+          </button>
+        )}
       </form>
     </aside>
   )
