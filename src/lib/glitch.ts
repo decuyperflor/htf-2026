@@ -24,6 +24,27 @@ export type Monster = {
   danger: number
 }
 
+export type Region = { regionId: string; name: string }
+
+export type Location = {
+  locationId: string
+  regionId: string
+  name: string
+  x: number
+  y: number
+  /** 1..5, set by the guild master. */
+  danger: number
+  /** Gold per adventurer when the monster here is slain. */
+  reward: number
+}
+
+export type World = { regions: Region[]; locations: Location[] }
+
+/** Quest rank for a location danger 1..5, guild-board style. */
+export function questRank(danger: number) {
+  return ['D', 'C', 'B', 'A', 'S'][Math.min(Math.max(danger, 1), 5) - 1]
+}
+
 export type Glitch = {
   glitchId: string
   status: GlitchStatus
@@ -31,11 +52,19 @@ export type Glitch = {
   /** ISO 8601 */
   timestamp: string
   monsterId: string
+  locationId: string
 }
 
 export type GlitchListItem = Glitch & {
   monsterName: string
+  /** Danger of the monster type (1..5). */
   danger: number
+  locationName: string
+  regionId: string
+  regionName: string
+  /** Danger the guild gave the location (1..5). */
+  locationDanger: number
+  reward: number
   echoCount: number
   /** Adventurers sent out to this monster. */
   assignedGuardianIds: number[]

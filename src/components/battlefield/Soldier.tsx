@@ -1,4 +1,4 @@
-import type { SoldierPos } from './Battlefield.tsx'
+import type { SoldierPos } from './types.ts'
 import { hash01 } from './geometry.ts'
 
 const STAFF_LENGTH = 26

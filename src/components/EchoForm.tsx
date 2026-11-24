@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
 import { Button } from '#/components/ui/Button.tsx'
-import type { Monster } from '#/lib/glitch.ts'
+import { questRank, type Monster, type World } from '#/lib/glitch.ts'
 import { reportEcho } from '#/lib/glitches.functions.ts'
 
 type EchoFormProps = {
@@ -9,13 +9,17 @@ type EchoFormProps = {
   glitchId?: string
   /** The monster index to choose from (only used for a new monster). */
   monsters?: Monster[]
+  /** Regions and locations to choose where the monster was seen (new monster only). */
+  world?: World
   submitLabel?: string
   onReported: (glitchId: string) => void | Promise<void>
 }
 
-export function EchoForm({ glitchId, monsters = [], submitLabel = 'Report sighting', onReported }: EchoFormProps) {
+export function EchoForm({ glitchId, monsters = [], world, submitLabel = 'Report sighting', onReported }: EchoFormProps) {
   const [description, setDescription] = useState('')
   const [monsterId, setMonsterId] = useState(monsters[0]?.monsterId ?? 'slime')
+  const firstLocation = world?.locations.find((l) => l.regionId !== 'city') ?? world?.locations[0]
+  const [locationId, setLocationId] = useState(firstLocation?.locationId ?? '')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const choosingMonster = !glitchId && monsters.length > 0
@@ -26,7 +30,12 @@ export function EchoForm({ glitchId, monsters = [], submitLabel = 'Report sighti
     setError(null)
     try {
       const result = await reportEcho({
-        data: { description, glitchId, monsterId: choosingMonster ? monsterId : undefined },
+        data: {
+          description,
+          glitchId,
+          monsterId: choosingMonster ? monsterId : undefined,
+          locationId: !glitchId && world ? locationId : undefined,
+        },
       })
       setDescription('')
       await onReported(result.glitchId)
@@ -65,6 +74,30 @@ export function EchoForm({ glitchId, monsters = [], submitLabel = 'Report sighti
             ))}
           </div>
         </fieldset>
+      )}
+
+      {!glitchId && world && (
+        <label className="flex flex-col gap-1.5 text-sm text-fg">
+          Where did you see it?
+          <select
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+            required
+            className="rounded-lg border border-line bg-white px-3 py-2"
+          >
+            {world.regions.map((r) => (
+              <optgroup key={r.regionId} label={r.name}>
+                {world.locations
+                  .filter((l) => l.regionId === r.regionId)
+                  .map((l) => (
+                    <option key={l.locationId} value={l.locationId}>
+                      {l.name} · rank {questRank(l.danger)} · {l.reward} gold
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
       )}
 
       <label className="flex flex-col gap-1.5 text-sm text-fg">

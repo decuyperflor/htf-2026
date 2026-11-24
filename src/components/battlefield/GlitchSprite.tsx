@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react'
 import { STATUS_LABELS } from '#/lib/glitch.ts'
-import type { GlitchSim, SoldierPos } from './Battlefield.tsx'
+import type { GlitchSim, SoldierPos } from './types.ts'
 import { MonsterBody } from './MonsterBody.tsx'
 import { staffTip } from './Soldier.tsx'
 import { SHOOT_MS, clamp01, easeOutBack, easeOutCubic, hash01 } from './geometry.ts'

@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Swords, Trash2 } from 'lucide-react'
+import { ArrowLeft, Coins, MapPin, Swords, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { EchoForm } from '#/components/EchoForm.tsx'
 import { DangerStars, MonsterIcon } from '#/components/MonsterIcon.tsx'
@@ -8,11 +8,12 @@ import { Button } from '#/components/ui/Button.tsx'
 import { Card } from '#/components/ui/Card.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { formatTimestamp } from '#/lib/format.ts'
-import { GLITCH_STATUSES, STATUS_LABELS, type GlitchStatus } from '#/lib/glitch.ts'
+import { GLITCH_STATUSES, STATUS_LABELS, questRank, type GlitchStatus } from '#/lib/glitch.ts'
 import {
   assignAdventurers,
   deleteGlitch,
   getGlitch,
+  setQuestAccepted,
   updateGlitchStatus,
 } from '#/lib/glitches.functions.ts'
 import { getGuardians } from '#/lib/guardians.functions.ts'
@@ -61,6 +62,18 @@ function GlitchPage() {
     }
   }
 
+  async function toggleQuest(accepted: boolean) {
+    setError(null)
+    try {
+      await setQuestAccepted({ data: { glitchId: glitch.glitchId, accepted } })
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update quest')
+    }
+  }
+
+  const onQuest = glitch.assignments.some((a) => a.guardianId === guardian?.guardianId)
+  const canAccept = can(guardian, PERMISSIONS.questAccept) && glitch.status !== 'FIXED'
   const canStatus = can(guardian, PERMISSIONS.glitchUpdateStatus)
   const canAssign = can(guardian, PERMISSIONS.glitchAssign)
   const canDelete = can(guardian, PERMISSIONS.glitchDelete)
@@ -85,6 +98,17 @@ function GlitchPage() {
             <DangerStars danger={glitch.danger} />
           </p>
           <p className="text-lg text-fg">{glitch.description}</p>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="inline-flex items-center gap-1 rounded-full bg-subtle px-3 py-1 text-fg">
+              <MapPin className="size-4" /> {glitch.locationName} · {glitch.regionName}
+            </span>
+            <span className="rounded-full bg-[#2b2340] px-3 py-1 font-bold text-white">
+              Rank {questRank(glitch.locationDanger)}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#ffcf4d]/25 px-3 py-1 font-bold text-[#8a6420]">
+              <Coins className="size-4" /> {glitch.reward} gold
+            </span>
+          </div>
           <p className="text-sm text-muted">
             Spotted on{' '}
             <time dateTime={glitch.timestamp} suppressHydrationWarning>
@@ -127,7 +151,14 @@ function GlitchPage() {
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold text-fg">Adventurers sent out</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-fg">Quest party</h2>
+          {canAccept && (
+            <Button variant={onQuest ? 'secondary' : 'primary'} onClick={() => toggleQuest(!onQuest)}>
+              <Swords className="size-4" /> {onQuest ? 'Leave quest' : 'Accept quest'}
+            </Button>
+          )}
+        </div>
         {canAssign ? (
           <AssignPanel
             glitchId={glitch.glitchId}

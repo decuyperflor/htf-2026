@@ -1,5 +1,5 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Activity, BookOpen, Castle, Eye, LogOut, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpen, Castle, Coins, Eye, LogOut, type LucideIcon } from 'lucide-react'
 import { PERMISSIONS, can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
 import { logout } from '#/lib/auth.functions.ts'
 
@@ -65,6 +65,14 @@ export function Sidebar({ guardian }: { guardian: SessionGuardian }) {
         <span className="px-1 text-[10px] uppercase tracking-wider text-white/60">
           {guardian.roleName}
         </span>
+        {guardian.roleId === 'defender' && (
+          <span
+            title={`${guardian.gold} gold earned`}
+            className="flex items-center gap-1 rounded-full bg-[#ffcf4d]/15 px-2 py-0.5 text-xs font-bold text-[#ffcf4d]"
+          >
+            <Coins className="size-3.5" /> {guardian.gold}
+          </span>
+        )}
         <button
           type="button"
           onClick={onLogout}

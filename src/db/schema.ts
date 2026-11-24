@@ -67,6 +67,31 @@ export const monsters = sqliteTable('monsters', {
   danger: integer('danger').notNull(),
 })
 
+// ---------- World: regions & locations ----------
+
+export const regions = sqliteTable('regions', {
+  /** e.g. 'lake'; also selects the artwork on the world map. */
+  regionId: text('region_id').primaryKey(),
+  name: text('name').notNull(),
+})
+
+/** A fixed spot in a region where monsters show up. The guild sets danger + reward. */
+export const locations = sqliteTable('locations', {
+  /** e.g. 'lake-pier' */
+  locationId: text('location_id').primaryKey(),
+  regionId: text('region_id')
+    .notNull()
+    .references(() => regions.regionId),
+  name: text('name').notNull(),
+  /** Position on the world map (SVG units, 1000 x 600). */
+  x: integer('x').notNull(),
+  y: integer('y').notNull(),
+  /** 1..5, set by the guild master (quest rank D..S). */
+  danger: integer('danger').notNull().default(1),
+  /** Gold paid to every adventurer on the quest when the monster is slain. */
+  reward: integer('reward').notNull().default(50),
+})
+
 // ---------- Glitches & echoes ----------
 
 export const glitches = sqliteTable('glitches', {
@@ -81,9 +106,31 @@ export const glitches = sqliteTable('glitches', {
     .notNull()
     .default('slime')
     .references(() => monsters.monsterId),
+  /** Where on the map the monster was spotted. */
+  locationId: text('location_id')
+    .notNull()
+    .default('guild-gate')
+    .references(() => locations.locationId),
 })
 
-/** Adventurers (defenders) the guild sent out to a monster. */
+/** Gold paid out per adventurer per slain monster (one row each, so never paid twice). */
+export const bounties = sqliteTable(
+  'bounties',
+  {
+    glitchId: text('glitch_id')
+      .notNull()
+      .references(() => glitches.glitchId, { onDelete: 'cascade' }),
+    guardianId: integer('guardian_id')
+      .notNull()
+      .references(() => guardians.guardianId, { onDelete: 'cascade' }),
+    gold: integer('gold').notNull(),
+    /** ISO 8601 */
+    paidAt: text('paid_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.glitchId, t.guardianId] })],
+)
+
+/** Adventurers (defenders) on the quest for a monster: accepted themselves or sent by the guild. */
 export const glitchAssignments = sqliteTable(
   'glitch_assignments',
   {

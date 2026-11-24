@@ -42,14 +42,24 @@ In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-the
 | defender | adventurer |
 | `LEAKED` / `ASSESSING` / `CONTAINING` / `FIXED` | Spotted / Scouting / Engaged / Slain |
 
+### Wereldkaart
+- Het dashboard is een kaart van Achrona met regio's (Whispering Woods, Ember Peaks, Mirror Lake, Gloom Marsh, Sunscar Desert, Achrona City)
+- Klik op een regio om in te zoomen: je ziet de monsters op hun locatie
+- Klik op een monster voor de quest: rank (D–S), beloning in goud, party → **Accept quest** (adventurers)
+- De guild master klikt op een locatie om danger (rank) en beloning in te stellen
+- Wordt een monster `FIXED` (Slain), dan krijgt elk party-lid de beloning van die locatie → goud + leaderboard
+
 ### Datamodel
 - `guardians` → `role_id` → `roles`; rechten per rol via `role_permissions` → `permissions`
 - `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token)
 - `monsters`: de monster-index (bestiarium), met `danger` 1–5
-- `glitches` → `monster_id`; `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)
-- `glitch_assignments`: welke adventurers de guild naar een monster stuurt
-- Een nieuwe echo zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `LEAKED`) van het gekozen monstertype
-- Grootte op het slagveld = `danger` van het monstertype + groei per extra echo
+- `regions` ← `locations` (x/y op de kaart, `danger` 1–5 en `reward` in goud, door de guild master)
+- `glitches` → `monster_id`, `location_id`; `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)
+- `glitch_assignments`: de quest-party (zelf geaccepteerd of door de guild master gestuurd)
+- `bounties`: uitbetaald goud per (glitch, adventurer) wanneer een monster verslagen is
+- Een nieuwe echo zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `LEAKED`) van het gekozen monstertype op de gekozen locatie
+- Grootte van een monster = `danger` van het monstertype + groei per extra echo
+
 ## Beoordeling
 > Hoe wij beoordelen wordt voor de start van de hackathon met alle studenten gedeeld, zodat dit meteen duidelijk is voor iedereen.
 

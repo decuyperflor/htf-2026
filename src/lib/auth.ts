@@ -9,6 +9,8 @@ export const PERMISSIONS = {
   echoCreate: 'echo:create',
   glitchUpdateStatus: 'glitch:update_status',
   glitchAssign: 'glitch:assign',
+  questAccept: 'quest:accept',
+  locationManage: 'location:manage',
   glitchDelete: 'glitch:delete',
   guardianManage: 'guardian:manage',
 } as const
@@ -20,6 +22,8 @@ export type SessionGuardian = {
   roleId: string
   roleName: string
   permissions: Permission[]
+  /** Total bounty gold earned. */
+  gold: number
 }
 
 export function can(guardian: SessionGuardian | null | undefined, permission: Permission) {

@@ -2,9 +2,9 @@
 // its SHA-256 hash as the row id in the `sessions` table.
 import { createHash, randomBytes } from 'node:crypto'
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
-import { and, eq, gt, lt } from 'drizzle-orm'
+import { and, eq, gt, lt, sql } from 'drizzle-orm'
 import { db } from '#/db/index.ts'
-import { guardians, rolePermissions, roles, sessions } from '#/db/schema.ts'
+import { bounties, guardians, rolePermissions, roles, sessions } from '#/db/schema.ts'
 import type { Permission, SessionGuardian } from '#/lib/auth.ts'
 
 export const SESSION_COOKIE = 'htf_session'
@@ -76,7 +76,13 @@ export function getSessionGuardian(): SessionGuardian | null {
     .where(eq(rolePermissions.roleId, row.roleId))
     .all()
 
-  return { ...row, permissions: perms.map((p) => p.permissionId as Permission) }
+  const { gold } = db
+    .select({ gold: sql<number>`coalesce(sum(${bounties.gold}), 0)` })
+    .from(bounties)
+    .where(eq(bounties.guardianId, row.guardianId))
+    .get()!
+
+  return { ...row, permissions: perms.map((p) => p.permissionId as Permission), gold }
 }
 
 /** Throws unless someone is logged in and (optionally) has the permission. */
