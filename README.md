@@ -54,9 +54,9 @@ In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-the
 
 ### Quest board & workflow
 - **Zoek/filters:** zoeken op monster, plaats, beschrijving, adventurer of ID; filteren op status, regio en rank; sorteren op datum, rank, beloning of sightings. Filters staan in de URL (blijven bewaard als je een quest opent en terugkeert)
-- **Chronicle (PDF):**  is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
-- **Sneltoetsen:** druk op  voor het overzicht (o.a.  kaart,  quest board,  zoeken, / volgende/vorige quest,  dark mode)
-- **Dark mode:** knop in de sidebar of ; onthouden per browser. Op de kaart valt de nacht
+- **Chronicle (PDF):** `/chronicle` is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
+- **Sneltoetsen:** druk op `?` voor het overzicht (o.a. `m` kaart, `q` quest board, `/` zoeken, `j`/`k` volgende/vorige quest, `d` dark mode)
+- **Dark mode:** knop in de sidebar of `d`; onthouden per browser. Op de kaart valt de nacht
 - **Lockdown mode:** zolang er een S-klasse dreiging loose is (monster met gevaar 5 of een monster op een rank-S locatie) kleurt de app rood met een alarmbanner. Verslaan = lockdown voorbij
 
 ### Datamodel
