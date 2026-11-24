@@ -110,7 +110,7 @@ function GlitchPage() {
       </p>
 
       <div className="flex flex-wrap items-start gap-5">
-        <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-[#120c2e]">
+        <div className="flex size-24 shrink-0 items-center justify-center rounded-sm border border-[#C9A24B] bg-[#101D38]">
           <MonsterIcon monsterId={glitch.monsterId} className="size-20" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -127,10 +127,10 @@ function GlitchPage() {
             <span className="inline-flex items-center gap-1 rounded-full bg-subtle px-3 py-1 text-fg">
               <MapPin className="size-4" /> {glitch.locationName} · {glitch.regionName}
             </span>
-            <span className="rounded-full bg-[#2b2340] px-3 py-1 font-bold text-white">
+            <span className="rounded-full bg-[#101D38] px-3 py-1 font-bold text-white">
               Rank {questRank(glitch.locationDanger)}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#ffcf4d]/25 px-3 py-1 font-bold text-[#8a6420]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#E3C47A]/25 px-3 py-1 font-bold text-[#8A6A2A]">
               <Coins className="size-4" /> {glitch.reward} gold
             </span>
           </div>
@@ -209,7 +209,7 @@ function GlitchPage() {
         <h2 className="text-xl font-semibold text-fg">Sightings ({glitch.echoes.length})</h2>
         <ol className="flex flex-col gap-3">
           {glitch.echoes.map((echo) => (
-            <li key={echo.echoId} className="rounded-xl border border-line p-4">
+            <li key={echo.echoId} className="rounded-md border border-line p-4">
               <p className="text-fg">{echo.description}</p>
               <p className="mt-2 text-sm text-muted">
                 {echo.reporterCodename} ·{' '}

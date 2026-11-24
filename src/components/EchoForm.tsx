@@ -69,7 +69,7 @@ export function EchoForm({
             {monsters.map((m) => (
               <label
                 key={m.monsterId}
-                className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-3 text-center text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-accent ${
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-md border p-3 text-center text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-accent ${
                   monsterId === m.monsterId ? 'border-accent bg-accent/5' : 'border-line hover:bg-subtle'
                 }`}
               >

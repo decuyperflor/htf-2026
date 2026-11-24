@@ -56,16 +56,16 @@ export function QuestPanel({
   }
 
   return (
-    <aside className="absolute top-4 right-4 bottom-4 flex w-80 max-w-[calc(100%-2rem)] flex-col gap-3 overflow-y-auto rounded-2xl border-2 border-[#2b2340] bg-[#fffaf0] p-4 text-[#2b2340] shadow-xl">
+    <aside className="absolute top-4 right-4 bottom-4 flex w-80 max-w-[calc(100%-2rem)] flex-col gap-3 overflow-y-auto rounded-sm border border-[#C9A24B] bg-[#FAF7EF] p-4 text-[#101D38] shadow-[inset_0_0_0_3px_#FAF7EF,inset_0_0_0_4px_rgb(201_162_75/0.5),0_10px_30px_rgb(0_0_0/0.4)]">
       <div className="flex items-start justify-between gap-2">
-        <span className="text-xs font-bold tracking-widest text-[#b8862f] uppercase">Quest · {glitch.glitchId}</span>
+        <span className="text-xs font-bold tracking-widest text-[#8A6A2A] uppercase">Quest · {glitch.glitchId}</span>
         <button type="button" onClick={onClose} aria-label="Close quest" className="rounded-full p-1 hover:bg-black/5">
           <X className="size-4" />
         </button>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-[#120c2e]">
+        <div className="flex size-16 shrink-0 items-center justify-center rounded-sm border border-[#C9A24B] bg-[#101D38]">
           <MonsterIcon monsterId={glitch.monsterId} className="size-14" />
         </div>
         <div className="min-w-0">
@@ -80,24 +80,24 @@ export function QuestPanel({
       <p className="text-sm">{glitch.description}</p>
 
       <dl className="grid grid-cols-2 gap-2 text-sm">
-        <div className="rounded-xl bg-white p-2.5 ring-1 ring-[#2b2340]/15">
-          <dt className="text-xs text-[#2b2340]/60">Quest rank</dt>
+        <div className="rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
+          <dt className="text-xs text-[#101D38]/60">Quest rank</dt>
           <dd className="text-2xl font-black">{questRank(glitch.locationDanger)}</dd>
         </div>
-        <div className="rounded-xl bg-white p-2.5 ring-1 ring-[#2b2340]/15">
-          <dt className="text-xs text-[#2b2340]/60">Reward</dt>
-          <dd className="flex items-center gap-1 text-2xl font-black text-[#b8862f]">
+        <div className="rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
+          <dt className="text-xs text-[#101D38]/60">Reward</dt>
+          <dd className="flex items-center gap-1 text-2xl font-black text-[#8A6A2A]">
             <Coins className="size-5" /> {glitch.reward}
           </dd>
         </div>
-        <div className="col-span-2 rounded-xl bg-white p-2.5 ring-1 ring-[#2b2340]/15">
-          <dt className="text-xs text-[#2b2340]/60">Location</dt>
+        <div className="col-span-2 rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
+          <dt className="text-xs text-[#101D38]/60">Location</dt>
           <dd className="font-semibold">
-            {glitch.locationName} <span className="font-normal text-[#2b2340]/60">· {glitch.regionName}</span>
+            {glitch.locationName} <span className="font-normal text-[#101D38]/60">· {glitch.regionName}</span>
           </dd>
         </div>
-        <div className="col-span-2 rounded-xl bg-white p-2.5 ring-1 ring-[#2b2340]/15">
-          <dt className="text-xs text-[#2b2340]/60">Party ({glitch.assignedGuardianIds.length})</dt>
+        <div className="col-span-2 rounded-md bg-white p-2.5 ring-1 ring-[#101D38]/15">
+          <dt className="text-xs text-[#101D38]/60">Party ({glitch.assignedGuardianIds.length})</dt>
           <dd className="flex flex-col gap-1 font-semibold">
             {glitch.assignedGuardianIds.length
               ? glitch.assignedGuardianIds.map((id) => {
@@ -105,7 +105,7 @@ export function QuestPanel({
                   return (
                     <span key={id} className="flex items-center justify-between gap-2">
                       {g?.codename ?? `#${id}`}
-                      <span className={`text-xs font-medium ${g?.online ? 'text-emerald-700' : 'text-[#6f5a99]'}`}>
+                      <span className={`text-xs font-medium ${g?.online ? 'text-emerald-700' : 'text-[#4A5675]'}`}>
                         {g?.online ? '⚔️ fighting' : '💤 asleep (offline)'}
                       </span>
                     </span>
@@ -123,7 +123,7 @@ export function QuestPanel({
       )}
 
       {slain && (
-        <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-700/20">
+        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-700/20">
           🏆 Quest complete – {glitch.reward} gold paid to the party
         </p>
       )}
@@ -136,7 +136,7 @@ export function QuestPanel({
           </Button>
         )}
         {can(me, PERMISSIONS.questAccept) && !slain && (
-          <Button onClick={toggle} disabled={pending} variant={onQuest ? 'secondary' : 'primary'} className={onQuest ? '!border-[#2b2340]/30 !bg-white !text-[#2b2340]' : ''}>
+          <Button onClick={toggle} disabled={pending} variant={onQuest ? 'secondary' : 'primary'} className={onQuest ? '!border-[#101D38]/30 !bg-white !text-[#101D38]' : ''}>
             <Swords className="size-4" />
             {pending ? '…' : onQuest ? 'Leave quest' : 'Accept quest'}
           </Button>

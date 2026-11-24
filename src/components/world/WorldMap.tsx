@@ -22,7 +22,7 @@ const RUN_SPEED = 160
 const SLOTS: [number, number][] = [[0, 0], [80, -40], [-80, -40], [80, 45], [-80, 45], [0, -85], [0, 85]]
 /** Closest the camera can get (map units across). */
 const MIN_VIEW_W = 90
-const DANGER_COLORS = ['#7fd18a', '#9fd4ff', '#ffd36b', '#ff9a5c', '#ff4d6d']
+const DANGER_COLORS = ['#8FB89A', '#8CC6D4', '#E3C47A', '#DA9A5A', '#E06A7C']
 
 type Box = { x: number; y: number; w: number; h: number }
 type MonsterSim = GlitchSim & { locationId: string; regionId: string; tx: number; ty: number; party: number[] }
@@ -401,7 +401,7 @@ export function WorldMap({
   return (
     <div
       ref={boxRef}
-      className="relative h-full w-full touch-none overflow-hidden rounded-3xl bg-[#7cc8e8]"
+      className="relative h-full w-full touch-none overflow-hidden rounded-md bg-[#101D38] ring-1 ring-[#C9A24B]"
       style={{ cursor: drag.current?.moved ? 'grabbing' : 'grab' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -424,9 +424,9 @@ export function WorldMap({
         >
           <defs>
             <radialGradient id="bf-blast">
-              <stop offset="0" stopColor="#fff7c2" />
-              <stop offset="0.4" stopColor="#ffb547" />
-              <stop offset="1" stopColor="#ff2d75" stopOpacity="0" />
+              <stop offset="0" stopColor="#FAF7EF" />
+              <stop offset="0.4" stopColor="#E3C47A" />
+              <stop offset="1" stopColor="#B3263E" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -464,9 +464,9 @@ export function WorldMap({
               className={clickArea ? 'cursor-pointer' : undefined}
               onClick={clickArea ? () => openArea(l.locationId) : undefined}
             >
-              <ellipse rx={24} ry={12} fill="#fffaf0" fillOpacity={0.28} stroke="#2b2340" strokeOpacity={0.45} strokeWidth={0.8} strokeDasharray="3 2" />
+              <ellipse rx={24} ry={12} fill="#FAF7EF" fillOpacity={0.28} stroke="#101D38" strokeOpacity={0.45} strokeWidth={0.8} strokeDasharray="3 2" />
               {occupied.has(l.locationId) && (
-                <circle r={1.8} cy={-4} fill={DANGER_COLORS[l.danger - 1]} stroke="#2b2340" strokeWidth={0.5} />
+                <circle r={1.8} cy={-4} fill={DANGER_COLORS[l.danger - 1]} stroke="#101D38" strokeWidth={0.5} />
               )}
             </g>
           ))}
@@ -490,22 +490,22 @@ export function WorldMap({
                   onKeyDown={clickArea ? (e) => e.key === 'Enter' && openArea(l.locationId) : undefined}
                   pointerEvents={clickArea ? 'auto' : 'none'}
                 >
-                  <rect x={-w / 2} y={-5.5} width={w} height={11} rx={5.5} fill="#fffaf0" stroke="#2b2340" strokeWidth={0.8} />
+                  <rect x={-w / 2} y={-5.5} width={w} height={11} rx={1.5} fill="#FAF7EF" stroke="#101D38" strokeWidth={0.7} />
                   {quest ? (
                     <>
-                      <circle cx={-w / 2 + 6} cy={0} r={4.2} fill={DANGER_COLORS[l.danger - 1]} stroke="#2b2340" strokeWidth={0.6} />
-                      <text x={-w / 2 + 6} y={1.9} textAnchor="middle" fontSize={5} fontWeight={800} fill="#2b2340">
+                      <circle cx={-w / 2 + 6} cy={0} r={4.2} fill={DANGER_COLORS[l.danger - 1]} stroke="#101D38" strokeWidth={0.6} />
+                      <text x={-w / 2 + 6} y={1.9} textAnchor="middle" fontSize={5} fontWeight={800} fill="#101D38">
                         {questRank(l.danger)}
                       </text>
-                      <text x={-w / 2 + 12} y={1.9} fontSize={5} fontWeight={600} fill="#2b2340">
+                      <text x={-w / 2 + 12} y={1.9} fontSize={5} fontWeight={600} fill="#101D38">
                         {l.name}
                       </text>
-                      <text x={w / 2 - 3} y={1.9} textAnchor="end" fontSize={4.6} fontWeight={700} fill="#b8862f">
+                      <text x={w / 2 - 3} y={1.9} textAnchor="end" fontSize={4.6} fontWeight={700} fill="#8A6A2A">
                         {l.reward}g
                       </text>
                     </>
                   ) : (
-                    <text x={0} y={1.9} textAnchor="middle" fontSize={5} fontWeight={600} fill="#2b2340">
+                    <text x={0} y={1.9} textAnchor="middle" fontSize={5} fontWeight={600} fill="#101D38">
                       {l.name}
                     </text>
                   )}
@@ -530,7 +530,7 @@ export function WorldMap({
                   return (
                     <g key={sim.id}>
                       {selectedGlitch === sim.id && (
-                        <circle cx={sim.x} cy={sim.y} r={sim.size * 1.9} fill="none" stroke="#ffcf4d" strokeWidth={5} strokeDasharray="10 8" transform={`rotate(${(now / 15) % 360} ${sim.x} ${sim.y})`} />
+                        <circle cx={sim.x} cy={sim.y} r={sim.size * 1.9} fill="none" stroke="#E3C47A" strokeWidth={5} strokeDasharray="10 8" transform={`rotate(${(now / 15) % 360} ${sim.x} ${sim.y})`} />
                       )}
                       {members.map((m, i) => {
                         // Online adventurers fight; the ones who are logged out sleep on the spot.
@@ -573,7 +573,7 @@ export function WorldMap({
       )}
 
       {/* Night falls over Achrona in dark mode */}
-      <div className="pointer-events-none absolute inset-0 hidden bg-[#0b1035]/45 mix-blend-multiply dark:block" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 hidden bg-[#0A1328]/45 mix-blend-multiply dark:block" aria-hidden />
 
       {/* HUD */}
       <div className="pointer-events-none absolute top-4 left-4 flex flex-wrap items-center gap-2" data-panel>
@@ -581,23 +581,23 @@ export function WorldMap({
           <button
             type="button"
             onClick={() => zoomTo(null)}
-            className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full border-2 border-[#2b2340] bg-[#fffaf0] px-3 py-1 text-sm font-semibold text-[#2b2340] shadow-md hover:bg-white"
+            className="pointer-events-auto inline-flex items-center gap-1.5 rounded-sm border border-[#C9A24B] bg-[#101D38] shadow-[0_0_0_1px_#0A1328,0_4px_10px_rgb(0_0_0/0.35)] px-3 py-1 text-sm font-semibold text-[#E9E2CF] hover:text-[#E3C47A]"
           >
             <ArrowLeft className="size-4" /> World map
           </button>
         )}
-        <span className="rounded-full border-2 border-[#2b2340] bg-[#fffaf0] px-3 py-1 text-sm font-bold text-[#2b2340] shadow-md">
+        <span className="rounded-sm border border-[#C9A24B] bg-[#101D38] shadow-[0_0_0_1px_#0A1328,0_4px_10px_rgb(0_0_0/0.35)] px-3 py-1 font-display text-sm font-bold tracking-wider text-[#E9E2CF]">
           {region ? names[region] : 'World of Achrona'}
         </span>
-        <span className="rounded-full bg-[#ff3b5c] px-2.5 py-1 text-xs font-bold text-white shadow-md">
+        <span className="rounded-sm border border-[#C9A24B] bg-[#B3263E] px-2.5 py-1 text-xs font-bold text-[#FAF7EF] shadow-[0_0_0_1px_#0A1328,0_4px_10px_rgb(0_0_0/0.35)]">
           {region ? (counts[region] ?? 0) : active.length} monsters at large
         </span>
         <div
           role="group"
           aria-label="Filter by quest rank"
-          className="pointer-events-auto flex items-center gap-1 rounded-full border-2 border-[#2b2340] bg-[#fffaf0] px-1.5 py-0.5 shadow-md"
+          className="pointer-events-auto flex items-center gap-1 rounded-sm border border-[#C9A24B] bg-[#101D38] shadow-[0_0_0_1px_#0A1328,0_4px_10px_rgb(0_0_0/0.35)] px-1.5 py-0.5"
         >
-          <span className="px-1 text-xs font-semibold text-[#2b2340]/70">Rank</span>
+          <span className="px-1 font-display text-xs font-semibold text-[#E9E2CF]/75">Rank</span>
           {[1, 2, 3, 4, 5].map((d) => {
             const on = ranks.includes(d)
             return (
@@ -607,7 +607,7 @@ export function WorldMap({
                 aria-pressed={on}
                 title={on ? `Hide rank ${questRank(d)} quests` : `Show rank ${questRank(d)} quests`}
                 onClick={() => setRanks((r) => (on ? r.filter((x) => x !== d) : [...r, d]))}
-                className={`size-6 rounded-full text-xs font-black transition ${on ? 'text-[#2b2340] shadow-sm' : 'bg-transparent text-[#2b2340]/35 line-through'}`}
+                className={`size-6 rounded-full font-display text-xs font-bold transition ${on ? 'text-[#101D38] ring-1 ring-[#0A1328]' : 'bg-transparent text-[#E9E2CF]/40 line-through'}`}
                 style={on ? { backgroundColor: DANGER_COLORS[d - 1] } : undefined}
               >
                 {questRank(d)}
@@ -617,11 +617,11 @@ export function WorldMap({
         </div>
       </div>
 
-      <div className="absolute top-4 right-4 flex flex-col overflow-hidden rounded-xl border-2 border-[#2b2340] bg-[#fffaf0] shadow-md" data-panel>
-        <button type="button" onClick={() => zoomBy(0.7)} aria-label="Zoom in" className="p-2 text-[#2b2340] hover:bg-white">
+      <div className="absolute top-4 right-4 flex flex-col overflow-hidden rounded-sm border border-[#C9A24B] bg-[#101D38] shadow-[0_0_0_1px_#0A1328,0_4px_10px_rgb(0_0_0/0.35)]" data-panel>
+        <button type="button" onClick={() => zoomBy(0.7)} aria-label="Zoom in" className="p-2 text-[#E9E2CF] hover:bg-white/10 hover:text-[#E3C47A]">
           <Plus className="size-4" />
         </button>
-        <button type="button" onClick={() => zoomBy(1 / 0.7)} aria-label="Zoom out" className="border-t-2 border-[#2b2340] p-2 text-[#2b2340] hover:bg-white">
+        <button type="button" onClick={() => zoomBy(1 / 0.7)} aria-label="Zoom out" className="border-t border-[#C9A24B]/60 p-2 text-[#E9E2CF] hover:bg-white/10 hover:text-[#E3C47A]">
           <Minus className="size-4" />
         </button>
       </div>
@@ -630,7 +630,7 @@ export function WorldMap({
         {/* All monsters count, whatever the rank filter shows. */}
         <MagicGauge level={magicLevel(glitches)} />
         {!selected && !selectedLoc && !spotAt && (
-          <p className="rounded-full bg-[#fffaf0]/90 px-3 py-1 text-xs font-medium text-[#2b2340]">
+          <p className="rounded-sm border border-[#C9A24B]/60 bg-[#101D38]/90 px-3 py-1 text-xs font-medium text-[#E9E2CF]">
             Drag to move · scroll to zoom · click a region or monster
             {manage ? ' · click an area to set danger & reward' : spot ? ' · click an area to spot a monster there' : ''}
           </p>
@@ -691,7 +691,7 @@ function MagicBolts({ from, to, now, seed }: { from: SoldierPos; to: { x: number
             y1={ty + (to.y - ty) * Math.max(0, p - back)}
             x2={tx + (to.x - tx) * p}
             y2={ty + (to.y - ty) * p}
-            stroke="#7df9ff"
+            stroke="#39C3D6"
             strokeWidth={4}
             strokeLinecap="round"
             opacity={0.9}

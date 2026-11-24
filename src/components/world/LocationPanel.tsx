@@ -40,10 +40,10 @@ export function LocationPanel({
   }
 
   return (
-    <aside className="absolute top-4 right-4 flex w-80 max-w-[calc(100%-2rem)] flex-col gap-3 rounded-2xl border-2 border-[#2b2340] bg-[#fffaf0] p-4 text-[#2b2340] shadow-xl">
+    <aside className="absolute top-4 right-4 flex w-80 max-w-[calc(100%-2rem)] flex-col gap-3 rounded-sm border border-[#C9A24B] bg-[#FAF7EF] p-4 text-[#101D38] shadow-[inset_0_0_0_3px_#FAF7EF,inset_0_0_0_4px_rgb(201_162_75/0.5),0_10px_30px_rgb(0_0_0/0.4)]">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span className="text-xs font-bold tracking-widest text-[#b8862f] uppercase">Location</span>
+          <span className="text-xs font-bold tracking-widest text-[#8A6A2A] uppercase">Location</span>
           <h3 className="text-lg leading-tight font-bold">{location.name}</h3>
         </div>
         <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 hover:bg-black/5">
@@ -59,7 +59,7 @@ export function LocationPanel({
               <label
                 key={d}
                 className={`flex size-10 cursor-pointer items-center justify-center rounded-lg border-2 text-lg font-black has-focus-visible:ring-2 has-focus-visible:ring-accent ${
-                  danger === d ? 'border-[#2b2340] bg-[#ffcf4d]' : 'border-[#2b2340]/20 bg-white hover:bg-black/5'
+                  danger === d ? 'border-[#101D38] bg-[#E3C47A]' : 'border-[#101D38]/20 bg-white hover:bg-black/5'
                 }`}
               >
                 <input type="radio" name="danger" value={d} checked={danger === d} onChange={() => setDanger(d)} className="sr-only" />
@@ -77,7 +77,7 @@ export function LocationPanel({
             step={10}
             value={reward}
             onChange={(e) => setReward(Number(e.target.value))}
-            className="rounded-lg border border-[#2b2340]/30 bg-white px-3 py-2 outline-none focus:border-accent"
+            className="rounded-lg border border-[#101D38]/30 bg-white px-3 py-2 outline-none focus:border-accent"
           />
         </label>
         {error && (

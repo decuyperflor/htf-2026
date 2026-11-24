@@ -16,8 +16,8 @@ export function magicLevel(glitches: GlitchListItem[]) {
 }
 
 export function magicMood(level: number) {
-  if (level >= 80) return { label: 'Flourishing', color: '#7b5cff' }
-  if (level >= 50) return { label: 'Flickering', color: '#e0a526' }
-  if (level >= 25) return { label: 'Fading', color: '#e0702e' }
-  return { label: 'Desync imminent', color: '#d7263d' }
+  if (level >= 80) return { label: 'Flourishing', color: '#1E7F8C' }
+  if (level >= 50) return { label: 'Flickering', color: '#8A6A2A' }
+  if (level >= 25) return { label: 'Fading', color: '#9A4A1F' }
+  return { label: 'Desync imminent', color: '#B3263E' }
 }

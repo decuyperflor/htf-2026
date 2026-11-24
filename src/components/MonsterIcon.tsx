@@ -11,7 +11,7 @@ export function MonsterIcon({ monsterId, className = 'size-8' }: { monsterId: st
 
 export function DangerStars({ danger }: { danger: number }) {
   return (
-    <span className="tracking-tight text-amber-500" aria-label={`Danger ${danger} of 5`} title={`Danger ${danger}/5`}>
+    <span className="tracking-tight text-[#C9A24B]" aria-label={`Danger ${danger} of 5`} title={`Danger ${danger}/5`}>
       {'★'.repeat(danger)}
       <span className="text-line">{'★'.repeat(5 - danger)}</span>
     </span>

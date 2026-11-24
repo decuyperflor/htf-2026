@@ -23,8 +23,8 @@ const navItems: NavItem[] = [
 
 // Icon-only items: the label lives in aria-label/title for screen readers and hover.
 const itemClass =
-  'flex size-12 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white'
-const activeClass = 'bg-white/10 text-white'
+  'flex size-12 items-center justify-center rounded-md text-[#E9E2CF]/70 transition-colors hover:bg-white/5 hover:text-[#E3C47A]'
+const activeClass = 'bg-white/5 text-[#E3C47A] ring-1 ring-inset ring-[#C9A24B]/70'
 
 export function Sidebar({
   guardian,
@@ -87,17 +87,17 @@ export function Sidebar({
       <div className="flex w-full flex-col items-center gap-3 text-center">
         <div
           title={`${guardian.codename} (${guardian.roleName})`}
-          className="flex size-10 items-center justify-center rounded-full border border-line bg-white text-sm font-semibold text-fg"
+          className="flex size-10 items-center justify-center rounded-full border-2 border-[#C9A24B] bg-[#E9E2CF] font-display text-sm font-bold text-[#101D38] shadow-[0_0_0_1px_#0A1328]"
         >
           {guardian.codename.slice(0, 2).toUpperCase()}
         </div>
-        <span className="px-1 text-[10px] uppercase tracking-wider text-white/60">
+        <span className="px-1 text-[10px] uppercase tracking-wider text-[#E9E2CF]/70">
           {guardian.roleName}
         </span>
         {guardian.roleId === 'defender' && (
           <span
             title={`${guardian.gold} gold earned`}
-            className="flex items-center gap-1 rounded-full bg-[#ffcf4d]/15 px-2 py-0.5 text-xs font-bold text-[#ffcf4d]"
+            className="flex items-center gap-1 rounded-full bg-[#E3C47A]/15 px-2 py-0.5 text-xs font-bold text-[#E3C47A]"
           >
             <Coins className="size-3.5" /> {guardian.gold}
           </span>

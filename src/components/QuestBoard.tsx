@@ -10,20 +10,14 @@ import type { GuardianSummary } from '#/lib/guardians.functions.ts'
 
 /** The workflow, one column per step, worded like a guild would. */
 const COLUMNS: Record<GlitchStatus, { title: string; hint: string; sign: string }> = {
-  LEAKED: { title: 'Spotted', hint: 'New requests – who takes them?', sign: '#c0392b' },
-  ASSESSING: { title: 'Scouting', hint: 'The guild is sizing it up', sign: '#d68910' },
-  CONTAINING: { title: 'Engaged', hint: 'Adventurers are fighting', sign: '#2e86c1' },
-  FIXED: { title: 'Slain', hint: 'Bounties paid out', sign: '#1e8449' },
+  LEAKED: { title: 'Spotted', hint: 'New requests – who takes them?', sign: '#B3263E' },
+  ASSESSING: { title: 'Scouting', hint: 'The guild is sizing it up', sign: '#8A6A2A' },
+  CONTAINING: { title: 'Engaged', hint: 'Adventurers are fighting', sign: '#1E6F7C' },
+  FIXED: { title: 'Slain', hint: 'Bounties paid out', sign: '#3F6B4E' },
 }
 /** Slain is history: keep the board short, the chronicle has the rest. */
 const MAX_SLAIN = 4
-const SEAL = ['#5b8c5a', '#3f7cac', '#c9a227', '#d35400', '#b03a2e']
-
-function tilt(id: string) {
-  let h = 0
-  for (const c of id) h = (h * 31 + c.charCodeAt(0)) | 0
-  return ((h % 7) - 3) * 0.45
-}
+const SEAL = ['#3F6B4E', '#2B5C8A', '#8A6A2A', '#9A4A1F', '#B3263E']
 
 export function QuestBoard({
   glitches,
@@ -102,8 +96,8 @@ export function QuestBoard({
         </p>
       )}
 
-      {/* The wooden guild board */}
-      <div className="quest-board overflow-x-auto rounded-3xl p-3 shadow-xl sm:p-4">
+      {/* The navy chart table */}
+      <div className="quest-board overflow-x-auto rounded-md p-3 sm:p-4">
         <div className="grid min-w-[1040px] grid-cols-4 gap-3">
           {GLITCH_STATUSES.map((status, col) => {
             const column = COLUMNS[status]
@@ -121,24 +115,24 @@ export function QuestBoard({
                 }}
                 onDragLeave={() => setOver((o) => (o === status ? null : o))}
                 onDrop={(e) => onDrop(e, status)}
-                className={`relative flex min-h-[420px] flex-col gap-4 rounded-2xl p-3 transition-colors ${
-                  over === status ? 'bg-white/25 ring-2 ring-[#ffcf4d]' : 'bg-black/10'
+                className={`relative flex min-h-[420px] flex-col gap-4 rounded-md p-3 transition-colors ${
+                  over === status ? 'bg-[#39C3D6]/15 ring-2 ring-[#E3C47A]' : 'bg-[#0A1328]/55 ring-1 ring-inset ring-[#C9A24B]/30'
                 }`}
               >
-                {/* Hanging sign */}
+                {/* Column plate */}
                 <header className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span
-                      className="rounded-md border-2 border-[#3b2412] px-3 py-1 text-sm font-black tracking-wider text-white uppercase shadow-md"
+                      className="rounded-sm border border-[#C9A24B] px-3 py-1 font-display text-sm font-bold tracking-[0.15em] text-[#FAF7EF] uppercase shadow-[0_0_0_1px_#0A1328]"
                       style={{ background: column.sign }}
                     >
                       {column.title}
                     </span>
-                    <span className="rounded-full bg-[#3b2412]/80 px-2 py-0.5 text-xs font-bold text-[#f6e7c8]">{all.length}</span>
+                    <span className="rounded-full border border-[#C9A24B]/60 bg-[#0A1328] px-2 py-0.5 text-xs font-bold text-[#E3C47A]">{all.length}</span>
                   </div>
-                  {col < GLITCH_STATUSES.length - 1 && <ArrowRight className="size-4 text-[#3b2412]/70" aria-hidden />}
+                  {col < GLITCH_STATUSES.length - 1 && <ArrowRight className="size-4 text-[#C9A24B]" aria-hidden />}
                 </header>
-                <p className="-mt-2 text-xs font-medium text-[#3b2412]/80">{column.hint}</p>
+                <p className="-mt-2 text-xs font-medium text-[#E9E2CF]/75">{column.hint}</p>
 
                 {cards.map((g) => (
                   <QuestCard
@@ -165,12 +159,12 @@ export function QuestBoard({
                   />
                 ))}
                 {!all.length && (
-                  <p className="rounded-xl border-2 border-dashed border-[#3b2412]/25 p-4 text-center text-sm text-[#3b2412]/70">
+                  <p className="rounded-md border border-dashed border-[#C9A24B]/40 p-4 text-center text-sm text-[#E9E2CF]/70">
                     {status === 'LEAKED' ? 'No new requests' : 'Nothing here'}
                   </p>
                 )}
                 {status === 'FIXED' && all.length > MAX_SLAIN && (
-                  <Link to="/chronicle" className="text-center text-sm font-semibold text-[#3b2412] underline-offset-2 hover:underline">
+                  <Link to="/chronicle" className="text-center text-sm font-semibold text-[#E3C47A] underline-offset-2 hover:underline">
                     +{all.length - MAX_SLAIN} more in the Chronicle →
                   </Link>
                 )}
@@ -223,24 +217,24 @@ function QuestCard({
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      style={{ transform: `rotate(${dragging ? 0 : tilt(g.glitchId)}deg)` }}
-      className={`parchment relative flex flex-col gap-2 rounded-sm px-4 pt-5 pb-3 text-[#2b1d0e] shadow-[0_6px_14px_rgb(40_20_0/0.35)] transition hover:-translate-y-0.5 hover:rotate-0 ${
+      
+      className={`parchment relative flex flex-col gap-2 rounded-sm px-4 pt-5 pb-3 text-[#101D38] transition hover:-translate-y-0.5 ${
         draggable ? 'cursor-grab active:cursor-grabbing' : ''
-      } ${dragging ? 'opacity-50' : ''} ${selected ? 'outline-4 outline-offset-2 outline-[#ffcf4d]' : ''} ${slain ? 'saturate-50' : ''}`}
+      } ${dragging ? 'opacity-50' : ''} ${selected ? 'outline-4 outline-offset-2 outline-[#E3C47A]' : ''} ${slain ? 'saturate-50' : ''}`}
     >
-      {/* Pin */}
-      <span className="absolute -top-1.5 left-1/2 size-3.5 -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff8a8a,#b3261e)] shadow-md" aria-hidden />
+      {/* Gold rivet */}
+      <span className="absolute top-2 left-2 size-2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#F3DC9A,#C9A24B_55%,#8A6A2A)] shadow-[0_0_0_1px_#101D38]" aria-hidden />
 
-      {/* Wax seal with the rank */}
+      {/* Seal with the rank, rimmed in gold */}
       <span
-        className="absolute -top-3 -right-3 flex size-11 rotate-12 items-center justify-center rounded-full text-lg font-black text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.25),0_3px_6px_rgb(0_0_0/0.3)]"
+        className="absolute -top-3 -right-3 flex size-11 items-center justify-center rounded-full border-2 border-[#C9A24B] font-display text-lg font-bold text-[#FAF7EF] shadow-[0_0_0_1px_#101D38,inset_0_-3px_0_rgb(0_0_0/0.25),0_3px_6px_rgb(0_0_0/0.3)]"
         style={{ background: SEAL[g.locationDanger - 1] }}
         title={`Rank ${rank}`}
       >
         {rank}
       </span>
 
-      <div className="flex items-center justify-between gap-2 pr-6 text-[10px] font-bold tracking-[0.2em] text-[#7a5a2e] uppercase">
+      <div className="flex items-center justify-between gap-2 pr-6 text-[10px] font-bold tracking-[0.2em] text-[#4A5675] uppercase">
         <span>Wanted · {g.glitchId}</span>
       </div>
 
@@ -248,14 +242,14 @@ function QuestCard({
         to="/glitches/$glitchId"
         params={{ glitchId: g.glitchId }}
         draggable={false}
-        className="flex items-center gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#7a5a2e]"
+        className="flex items-center gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#4A5675]"
       >
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-[#120c2e] shadow-inner">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-sm border border-[#C9A24B] bg-[#101D38] shadow-inner">
           <MonsterIcon monsterId={g.monsterId} className="size-10" />
         </span>
         <span className="min-w-0">
-          <span className="block font-serif text-lg leading-tight font-bold">{g.monsterName}</span>
-          <span className="block truncate text-xs text-[#5c4523]">
+          <span className="block font-display text-lg leading-tight font-bold">{g.monsterName}</span>
+          <span className="block truncate text-xs text-[#2B3D62]">
             {g.locationName} · {g.regionName}
           </span>
         </span>
@@ -263,15 +257,15 @@ function QuestCard({
 
       <p className="line-clamp-2 text-sm italic">“{g.description}”</p>
 
-      <div className="flex items-center justify-between gap-2 border-t border-dashed border-[#7a5a2e]/40 pt-2 text-xs">
-        <span className="flex items-center gap-1 text-base font-black text-[#9a6b12]">
+      <div className="flex items-center justify-between gap-2 border-t border-dashed border-[#4A5675]/40 pt-2 text-xs">
+        <span className="flex items-center gap-1 text-base font-black text-[#8A6A2A]">
           <Coins className="size-4" /> {g.reward}
-          <span className="text-[10px] font-semibold text-[#7a5a2e]">gold</span>
+          <span className="text-[10px] font-semibold text-[#4A5675]">gold</span>
         </span>
-        <span className="flex items-center gap-1 text-[#5c4523]" title={`${g.echoCount} sightings`}>
+        <span className="flex items-center gap-1 text-[#2B3D62]" title={`${g.echoCount} sightings`}>
           <Eye className="size-3.5" /> {g.echoCount}
         </span>
-        <span className="text-[#5c4523]" suppressHydrationWarning>
+        <span className="text-[#2B3D62]" suppressHydrationWarning>
           {formatTimestamp(g.timestamp).split(',')[0]}
         </span>
       </div>
@@ -285,17 +279,17 @@ function QuestCard({
               <span
                 key={id}
                 title={`${member?.codename ?? id} – ${member?.online ? 'online' : 'asleep (offline)'}`}
-                className="relative flex size-7 items-center justify-center rounded-full border-2 border-[#7a5a2e] bg-[#f6e7c8] text-[10px] font-bold uppercase"
+                className="relative flex size-7 items-center justify-center rounded-full border-2 border-[#4A5675] bg-[#E9E2CF] text-[10px] font-bold uppercase"
               >
                 {(member?.codename ?? '?').slice(0, 2)}
                 <span
-                  className={`absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border border-[#f6e7c8] ${member?.online ? 'bg-emerald-500' : 'bg-[#a19bc4]'}`}
+                  className={`absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border border-[#E9E2CF] ${member?.online ? 'bg-emerald-500' : 'bg-[#9AA3B8]'}`}
                 />
               </span>
             )
           })
         ) : (
-          <span className="text-xs text-[#7a5a2e] italic">{slain ? 'Slain by the guild' : 'No party yet'}</span>
+          <span className="text-xs text-[#4A5675] italic">{slain ? 'Slain by the guild' : 'No party yet'}</span>
         )}
       </div>
 
@@ -305,7 +299,7 @@ function QuestCard({
             <button
               type="button"
               onClick={() => onComplete(g.glitchId)}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border-2 border-[#2f6b2a] bg-[#2f6b2a] px-2 py-1 text-xs font-bold text-[#f1f7e8] hover:bg-[#25561f]"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border-2 border-[#3F6B4E] bg-[#3F6B4E] px-2 py-1 text-xs font-bold text-[#F4EFE2] hover:bg-[#335A41]"
             >
               <Trophy className="size-3.5" /> Complete · claim {g.reward} gold
             </button>
@@ -316,8 +310,8 @@ function QuestCard({
               onClick={() => onAccept(g.glitchId, !onQuest)}
               className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border-2 px-2 py-1 text-xs font-bold ${
                 onQuest
-                  ? 'border-[#7a5a2e]/40 bg-transparent text-[#5c4523] hover:bg-[#7a5a2e]/10'
-                  : 'border-[#3b2412] bg-[#3b2412] text-[#f6e7c8] hover:bg-[#5a3a1e]'
+                  ? 'border-[#4A5675]/40 bg-transparent text-[#2B3D62] hover:bg-[#4A5675]/10'
+                  : 'border-[#101D38] bg-[#101D38] text-[#E9E2CF] hover:bg-[#1A2B4D]'
               }`}
             >
               <Swords className="size-3.5" /> {onQuest ? 'Leave quest' : 'Accept quest'}
@@ -327,7 +321,7 @@ function QuestCard({
             <button
               type="button"
               onClick={onAdvance}
-              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border-2 border-[#3b2412]/50 px-2 py-1 text-xs font-bold text-[#3b2412] hover:bg-[#7a5a2e]/10"
+              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border-2 border-[#101D38]/50 px-2 py-1 text-xs font-bold text-[#101D38] hover:bg-[#4A5675]/10"
             >
               Next step: {STATUS_LABELS[GLITCH_STATUSES[GLITCH_STATUSES.indexOf(status) + 1]]} <ArrowRight className="size-3.5" />
             </button>
@@ -336,7 +330,7 @@ function QuestCard({
       )}
 
       {slain && (
-        <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-md border-4 border-[#b3261e] px-3 py-0.5 text-2xl font-black tracking-widest text-[#b3261e] opacity-80 mix-blend-multiply">
+        <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-md border-4 border-[#B3263E] px-3 py-0.5 text-2xl font-black tracking-widest text-[#B3263E] opacity-80 mix-blend-multiply">
           SLAIN
         </span>
       )}

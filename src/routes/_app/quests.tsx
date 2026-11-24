@@ -158,7 +158,7 @@ function QuestBoardPage() {
         </div>
 
         {/* Search + filters */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4">
+        <div className="flex flex-col gap-3 rounded-md border border-line bg-card p-4">
           <label className="relative flex items-center">
             <span className="sr-only">Search quests</span>
             <Search className="pointer-events-none absolute left-3 size-4 text-muted" />
@@ -287,9 +287,9 @@ function QuestBoardPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="flex items-center gap-2 text-2xl font-semibold text-fg">
-          <Trophy className="size-6 text-[#b8862f]" /> Leaderboard
+          <Trophy className="size-6 text-[#8A6A2A]" /> Leaderboard
         </h2>
-        <ol className="flex flex-col divide-y divide-line rounded-xl border border-line bg-card">
+        <ol className="flex flex-col divide-y divide-line rounded-md border border-line bg-card">
           {leaderboard.map((row, i) => {
             const online = guardians.find((g) => g.guardianId === row.guardianId)?.online
             return (
@@ -316,7 +316,7 @@ function QuestBoardPage() {
                   ))}
                 </span>
                 <span className="text-xs text-muted">{row.slain} slain</span>
-                <span className="flex items-center gap-1 font-bold text-[#b8862f]">
+                <span className="flex items-center gap-1 font-bold text-[#8A6A2A]">
                   <Coins className="size-4" /> {row.gold}
                 </span>
               </li>

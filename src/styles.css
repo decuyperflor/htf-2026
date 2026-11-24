@@ -24,45 +24,57 @@
   --color-glow: var(--glow);
 }
 
-/* The guild hall: cork walls, dark wood, parchment notices and red wax. */
+/*
+ * Guardians of the Grid: the guild's chart room. Night-navy, engraved gold rules,
+ * bone paper, crimson seals and the cyan ley-line grid (the colours of the shield).
+ */
 :root {
-  --app: #c49a6c;
-  --sidebar: #3b2412;
-  --panel: #f6ead0;
-  --card: #f8eed6;
-  --card-strong: #efdfbb;
-  --line: #d2b98a;
-  --fg: #2b1d0e;
-  --muted: #6b4e26;
-  --subtle: #efe0bd;
-  --subtle-hover: #e6d2a6;
-  --accent: #a8321e;
-  --accent-from: #d9653b;
-  --accent-to: #a8321e;
-  --glow: rgb(168 50 30 / 0.2);
-  --cork-dot: rgb(90 58 30 / 0.22);
-  --cork-light: rgb(255 240 210 / 0.18);
+  --navy: #101d38;
+  --navy-deep: #0a1328;
+  --gold: #c9a24b;
+  --gold-light: #e3c47a;
+  --gold-dark: #8a6a2a;
+  --bone: #e9e2cf;
+  --crimson: #b3263e;
+  --cyan: #39c3d6;
+
+  --app: #e6dfcb;
+  --sidebar: #101d38;
+  --panel: #f4efe2;
+  --card: #faf7ef;
+  --card-strong: #ebe3cc;
+  --line: #d3c6a2;
+  --fg: #101d38;
+  --muted: #4a5675;
+  --subtle: #ece5d2;
+  --subtle-hover: #e2d8bd;
+  --accent: #b3263e;
+  --accent-from: #cf4a5e;
+  --accent-to: #b3263e;
+  --glow: rgb(179 38 62 / 0.2);
+  --grid-minor: rgb(16 29 56 / 0.06);
+  --grid-major: rgb(16 29 56 / 0.11);
   color-scheme: light;
 }
 
-/* Night in the guild hall: candle-lit wood and aged parchment. */
+/* Night watch: the chart room by lamplight. */
 :root[data-theme="dark"] {
-  --app: #2a1b10;
-  --sidebar: #160d06;
-  --panel: #3a2817;
-  --card: #3d2a18;
-  --card-strong: #4a331d;
-  --line: #5c4227;
-  --fg: #f3e6c8;
-  --muted: #c9ad80;
-  --subtle: #4a331d;
-  --subtle-hover: #5c4227;
-  --accent: #e0703f;
-  --accent-from: #f09a6a;
-  --accent-to: #d0602e;
-  --glow: rgb(224 112 63 / 0.25);
-  --cork-dot: rgb(0 0 0 / 0.3);
-  --cork-light: rgb(255 220 160 / 0.05);
+  --app: #0a1328;
+  --sidebar: #070e1f;
+  --panel: #101d38;
+  --card: #13223f;
+  --card-strong: #1a2b4d;
+  --line: #2b3d62;
+  --fg: #e9e2cf;
+  --muted: #a9b1c6;
+  --subtle: #1a2b4d;
+  --subtle-hover: #23375e;
+  --accent: #e85a6f;
+  --accent-from: #f07c8d;
+  --accent-to: #d9455c;
+  --glow: rgb(57 195 214 / 0.22);
+  --grid-minor: rgb(57 195 214 / 0.05);
+  --grid-major: rgb(201 162 75 / 0.09);
   color-scheme: dark;
 }
 
@@ -104,54 +116,64 @@ body {
   color: var(--fg);
 }
 body {
-  /* Cork texture everywhere. */
+  /* The grid: a fine survey grid with a heavier line every fifth square. */
   background-image:
-    radial-gradient(var(--cork-dot) 1px, transparent 1.6px),
-    radial-gradient(var(--cork-light) 1px, transparent 1.6px);
-  background-size: 7px 7px, 11px 11px;
-  background-position: 0 0, 3px 4px;
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
   background-attachment: fixed;
 }
 h1,
 h2 {
   font-family: var(--font-display);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
-/* Dark wood (sidebar). */
+/* Sidebar: night-navy with a faint grid and an engraved gold edge. (Class name kept from the wood theme.) */
 .wood {
   background-image:
-    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 11px),
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.12) 0 1px, transparent 1px 23px),
-    linear-gradient(90deg, rgb(0 0 0 / 0.2), transparent 30%, transparent 70%, rgb(0 0 0 / 0.25));
-  box-shadow: inset -3px 0 0 rgb(0 0 0 / 0.35);
+    linear-gradient(rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 0 0 / 0.25), transparent 35%, transparent 65%, rgb(0 0 0 / 0.3));
+  background-size: 16px 16px, 16px 16px, auto;
+  box-shadow:
+    inset -1px 0 0 var(--gold),
+    inset -4px 0 0 rgb(0 0 0 / 0.35),
+    inset -5px 0 0 rgb(201 162 75 / 0.45);
 }
 
-/* A big parchment notice pinned to the wall: the page content of most pages. */
+/* A bound sheet of chart paper with a double gold rule: the page content of most pages. */
 .paper-sheet {
   position: relative;
-  background: radial-gradient(ellipse at 50% 30%, var(--card) 0%, var(--panel) 75%, var(--card-strong) 100%);
-  border-radius: 4px;
+  background: linear-gradient(180deg, var(--card) 0%, var(--panel) 100%);
+  border: 1px solid var(--gold);
+  border-radius: 3px;
   box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.4) inset,
-    0 14px 34px rgb(40 20 0 / 0.35);
+    inset 0 0 0 4px var(--panel),
+    inset 0 0 0 5px rgb(201 162 75 / 0.55),
+    0 14px 34px rgb(10 19 40 / 0.28);
 }
+/* Gold rivets in the top corners, like the studs on the shield. */
 .paper-sheet::before,
 .paper-sheet::after {
   content: "";
   position: absolute;
-  top: 10px;
-  width: 14px;
-  height: 14px;
+  top: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 9999px;
-  background: radial-gradient(circle at 35% 35%, #ff8a8a, #b3261e);
-  box-shadow: 0 2px 3px rgb(0 0 0 / 0.4);
+  background: radial-gradient(circle at 35% 35%, #f3dc9a, #c9a24b 55%, #8a6a2a);
+  box-shadow:
+    0 0 0 1px #101d38,
+    0 1px 2px rgb(0 0 0 / 0.35);
 }
 .paper-sheet::before {
-  left: 14px;
+  left: 12px;
 }
 .paper-sheet::after {
-  right: 14px;
+  right: 12px;
 }
 
 /* The chronicle is printed (saved as PDF) on white paper, whatever the theme. */
@@ -188,24 +210,31 @@ h2 {
   }
 }
 
-/* ---------- Guild quest board: cork in a wooden frame, parchment posters ---------- */
+/* ---------- Quest board: a navy chart table with the ley-line grid, in a gold-rimmed frame ---------- */
 .quest-board {
-  background-color: #c49a6c;
+  background-color: #101d38;
   background-image:
-    radial-gradient(rgb(90 58 30 / 0.22) 1px, transparent 1.6px),
-    radial-gradient(rgb(255 240 210 / 0.18) 1px, transparent 1.6px);
-  background-size: 7px 7px, 11px 11px;
-  background-position: 0 0, 3px 4px;
-  border: 10px solid #6b4423;
+    linear-gradient(rgb(57 195 214 / 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 195 214 / 0.16) 1px, transparent 1px),
+    linear-gradient(rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, #1a2b4d 0%, transparent 70%);
+  background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px, auto;
+  border: 6px solid #0a1328;
   box-shadow:
-    inset 0 0 0 2px #3b2412,
-    inset 0 6px 18px rgb(40 20 0 / 0.35),
-    0 12px 30px rgb(40 20 0 / 0.25);
+    0 0 0 1px #c9a24b,
+    inset 0 0 0 1px #c9a24b,
+    inset 0 0 0 4px #0a1328,
+    inset 0 0 0 5px rgb(201 162 75 / 0.5),
+    inset 0 8px 24px rgb(0 0 0 / 0.45),
+    0 12px 30px rgb(10 19 40 / 0.3);
 }
-:root[data-theme="dark"] .quest-board {
-  background-color: #8a6440;
-  border-color: #4a2e16;
-}
+/* A notice on bone paper, edged in gold (quest posters, the login notice). */
 .parchment {
-  background: radial-gradient(ellipse at 50% 40%, #fdf5e2 0%, #f3e0b7 70%, #e3c690 100%);
+  background: linear-gradient(180deg, #faf7ef 0%, #f4efe2 60%, #e9e2cf 100%);
+  box-shadow:
+    inset 0 0 0 1px #c9a24b,
+    inset 0 0 0 4px #f4efe2,
+    inset 0 0 0 5px rgb(201 162 75 / 0.5),
+    0 6px 16px rgb(5 10 24 / 0.45);
 }

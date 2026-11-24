@@ -49,7 +49,7 @@ function ChroniclePage() {
       </div>
 
       <header className="flex flex-col gap-1 border-b-2 border-line pb-5">
-        <p className="text-xs font-bold tracking-[0.2em] text-[#b8862f] uppercase">For the High Council of Achrona</p>
+        <p className="text-xs font-bold tracking-[0.2em] text-[#8A6A2A] uppercase">For the High Council of Achrona</p>
         <h1 className="text-3xl font-semibold text-fg">Chronicle of slain monsters</h1>
         <p className="text-sm text-muted">
           Drawn up by {guardian.codename} ({guardian.roleName}) on{' '}
@@ -79,7 +79,7 @@ function ChroniclePage() {
                 <tr key={codename} className="border-b border-line/60">
                   <td className="py-2 font-medium">{codename}</td>
                   <td className="py-2">{s.slain}</td>
-                  <td className="py-2 text-right font-semibold text-[#b8862f]">{s.gold} gold</td>
+                  <td className="py-2 text-right font-semibold text-[#8A6A2A]">{s.gold} gold</td>
                 </tr>
               ))}
             </tbody>
@@ -93,9 +93,9 @@ function ChroniclePage() {
         {entries.map((e) => {
           const gold = e.party.reduce((s, p) => s + p.gold, 0)
           return (
-            <section key={e.glitchId} className="flex break-inside-avoid flex-col gap-3 rounded-2xl border border-line p-5 print:rounded-none print:p-3">
+            <section key={e.glitchId} className="flex break-inside-avoid flex-col gap-3 rounded-md border border-line p-5 print:rounded-none print:p-3">
               <div className="flex flex-wrap items-start gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#120c2e] print:size-10">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-sm border border-[#C9A24B] bg-[#101D38] print:size-10">
                   <MonsterIcon monsterId={e.monsterId} className="size-10 print:size-8" />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -132,11 +132,11 @@ function ChroniclePage() {
                     <ul className="flex flex-col gap-1 text-sm">
                       {e.party.map((p) => (
                         <li key={p.codename} className="flex justify-between gap-2 text-fg">
-                          {p.codename} <span className="font-semibold text-[#b8862f]">{p.gold} gold</span>
+                          {p.codename} <span className="font-semibold text-[#8A6A2A]">{p.gold} gold</span>
                         </li>
                       ))}
                       <li className="flex justify-between gap-2 border-t border-line pt-1 font-semibold text-fg">
-                        Total <span className="text-[#b8862f]">{gold} gold</span>
+                        Total <span className="text-[#8A6A2A]">{gold} gold</span>
                       </li>
                     </ul>
                   ) : (
@@ -154,8 +154,8 @@ function ChroniclePage() {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-line p-4 print:p-2">
-      <span className="flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent">{icon}</span>
+    <div className="flex items-center gap-3 rounded-md border border-line p-4 print:p-2">
+      <span className="flex size-10 items-center justify-center rounded-md bg-accent/10 text-accent">{icon}</span>
       <div>
         <p className="text-xs text-muted">{label}</p>
         <p className="text-xl font-semibold text-fg">{value}</p>

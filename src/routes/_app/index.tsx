@@ -31,7 +31,7 @@ function ReconnectingNotice() {
   }, [router])
   return (
     <div className={FULL_SCREEN}>
-      <div className="flex h-full items-center justify-center rounded-3xl bg-[#7cc8e8] text-[#2b2340]">
+      <div className="flex h-full items-center justify-center rounded-md bg-[#101D38] text-[#E9E2CF] ring-1 ring-[#C9A24B]">
         Lost contact with the guild hall – reconnecting…
       </div>
     </div>

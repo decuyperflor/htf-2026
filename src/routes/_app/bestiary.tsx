@@ -22,8 +22,8 @@ function BestiaryPage() {
       </div>
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {monsters.map((m) => (
-          <li key={m.monsterId} className="flex gap-4 rounded-2xl border border-line p-5">
-            <div className="flex size-24 shrink-0 items-center justify-center rounded-xl bg-[#120c2e]">
+          <li key={m.monsterId} className="flex gap-4 rounded-md border border-line p-5">
+            <div className="flex size-24 shrink-0 items-center justify-center rounded-sm border border-[#C9A24B] bg-[#101D38]">
               <MonsterIcon monsterId={m.monsterId} className="size-20" />
             </div>
             <div className="flex flex-col gap-1">

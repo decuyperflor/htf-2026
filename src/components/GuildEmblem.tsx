@@ -54,10 +54,11 @@ export function GuildEmblem({ className = '', title = 'Guardians of the Grid' }:
             return (
               <line
                 key={i}
-                x1={120 + Math.sin(a) * r1}
-                y1={118 - Math.cos(a) * r1}
-                x2={120 + Math.sin(a) * r2}
-                y2={118 - Math.cos(a) * r2}
+                // Rounded: server and browser format long floats differently (hydration mismatch).
+                x1={(120 + Math.sin(a) * r1).toFixed(2)}
+                y1={(118 - Math.cos(a) * r1).toFixed(2)}
+                x2={(120 + Math.sin(a) * r2).toFixed(2)}
+                y2={(118 - Math.cos(a) * r2).toFixed(2)}
                 strokeWidth={big ? 2 : 1.2}
               />
             )

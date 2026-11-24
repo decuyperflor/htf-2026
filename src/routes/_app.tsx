@@ -129,9 +129,9 @@ function AppLayout() {
       {offline && (
         <div
           role="status"
-          className="print-hidden fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border-2 border-[#2b1d0e] bg-[#3b2412] py-1.5 pr-4 pl-3 text-sm font-semibold text-[#f6e7c8] shadow-lg"
+          className="print-hidden fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#C9A24B] bg-[#101D38] py-1.5 pr-4 pl-3 text-sm font-semibold text-[#E9E2CF] shadow-lg"
         >
-          <WifiOff className="size-4 shrink-0 text-[#ff9a5c]" />
+          <WifiOff className="size-4 shrink-0 text-[#E3C47A]" />
           Offline – lost contact with the guild hall. Showing the last known state, reconnecting…
         </div>
       )}
@@ -152,7 +152,7 @@ function ShortcutHelp({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="shortcut-title"
-        className="w-full max-w-md rounded-2xl border border-line bg-card p-6 text-fg shadow-2xl"
+        className="w-full max-w-md rounded-md border border-line bg-card p-6 text-fg shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
