@@ -1,244 +1,250 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap");
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* `dark:` follows our own toggle (data-theme on <html>), not the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cinzel", Georgia, serif;
+
+  --color-app: var(--app);
+  --color-sidebar: var(--sidebar);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-card-strong: var(--card-strong);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-subtle-hover: var(--subtle-hover);
+  --color-accent: var(--accent);
+  --color-accent-from: var(--accent-from);
+  --color-accent-to: var(--accent-to);
+  --color-glow: var(--glow);
+}
+
+/*
+ * Guardians of the Grid: the guild's chart room. Night-navy, engraved gold rules,
+ * bone paper, crimson seals and the cyan ley-line grid (the colours of the shield).
+ */
+:root {
+  --navy: #101d38;
+  --navy-deep: #0a1328;
+  --gold: #c9a24b;
+  --gold-light: #e3c47a;
+  --gold-dark: #8a6a2a;
+  --bone: #e9e2cf;
+  --crimson: #b3263e;
+  --cyan: #39c3d6;
+
+  --app: #e6dfcb;
+  --sidebar: #101d38;
+  --panel: #f4efe2;
+  --card: #faf7ef;
+  --card-strong: #ebe3cc;
+  --line: #d3c6a2;
+  --fg: #101d38;
+  --muted: #4a5675;
+  --subtle: #ece5d2;
+  --subtle-hover: #e2d8bd;
+  --accent: #b3263e;
+  --accent-from: #cf4a5e;
+  --accent-to: #b3263e;
+  --glow: rgb(179 38 62 / 0.2);
+  --grid-minor: rgb(16 29 56 / 0.06);
+  --grid-major: rgb(16 29 56 / 0.11);
+  color-scheme: light;
+}
+
+/* Night watch: the chart room by lamplight. */
+:root[data-theme="dark"] {
+  --app: #0a1328;
+  --sidebar: #070e1f;
+  --panel: #101d38;
+  --card: #13223f;
+  --card-strong: #1a2b4d;
+  --line: #2b3d62;
+  --fg: #e9e2cf;
+  --muted: #a9b1c6;
+  --subtle: #1a2b4d;
+  --subtle-hover: #23375e;
+  --accent: #e85a6f;
+  --accent-from: #f07c8d;
+  --accent-to: #d9455c;
+  --glow: rgb(57 195 214 / 0.22);
+  --grid-minor: rgb(57 195 214 / 0.05);
+  --grid-major: rgb(201 162 75 / 0.09);
+  color-scheme: dark;
+}
+
+/* Lockdown: an S-class threat is loose. Everything turns alarm red (in light and dark mode). */
+:root[data-lockdown] {
+  --sidebar: #4a0d1c;
+  --accent: #e11d48;
+  --accent-from: #fb7185;
+  --accent-to: #e11d48;
+  --glow: rgb(225 29 72 / 0.3);
+}
+:root[data-lockdown][data-theme="dark"] {
+  --sidebar: #2a0510;
+  --app: #1a0a14;
+}
+
+@keyframes lockdown-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 60px 6px rgb(225 29 72 / 0.25);
+  }
+  50% {
+    box-shadow: inset 0 0 120px 18px rgb(225 29 72 / 0.55);
+  }
+}
+.lockdown-vignette {
+  animation: lockdown-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lockdown-vignette {
+    animation: none;
+    box-shadow: inset 0 0 80px 10px rgb(225 29 72 / 0.35);
+  }
+}
+
+html,
+body {
+  background-color: var(--app);
+  color: var(--fg);
+}
+body {
+  /* The grid: a fine survey grid with a heavier line every fifth square. */
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  background-attachment: fixed;
+}
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+/* Sidebar: night-navy with a faint grid and an engraved gold edge. (Class name kept from the wood theme.) */
+.wood {
+  background-image:
+    linear-gradient(rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 0 0 / 0.25), transparent 35%, transparent 65%, rgb(0 0 0 / 0.3));
+  background-size: 16px 16px, 16px 16px, auto;
+  box-shadow:
+    inset -1px 0 0 var(--gold),
+    inset -4px 0 0 rgb(0 0 0 / 0.35),
+    inset -5px 0 0 rgb(201 162 75 / 0.45);
+}
+
+/* A bound sheet of chart paper with a double gold rule: the page content of most pages. */
+.paper-sheet {
+  position: relative;
+  background: linear-gradient(180deg, var(--card) 0%, var(--panel) 100%);
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 4px var(--panel),
+    inset 0 0 0 5px rgb(201 162 75 / 0.55),
+    0 14px 34px rgb(10 19 40 / 0.28);
+}
+/* Gold rivets in the top corners, like the studs on the shield. */
+.paper-sheet::before,
+.paper-sheet::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #f3dc9a, #c9a24b 55%, #8a6a2a);
+  box-shadow:
+    0 0 0 1px #101d38,
+    0 1px 2px rgb(0 0 0 / 0.35);
+}
+.paper-sheet::before {
+  left: 12px;
+}
+.paper-sheet::after {
+  right: 12px;
+}
+
+/* The chronicle is printed (saved as PDF) on white paper, whatever the theme. */
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root[data-lockdown] {
+    --app: #ffffff;
+    --panel: #ffffff;
+    --card: #ffffff;
+    --line: #d9d6e3;
+    --fg: #0c0c14;
+    --muted: #5d5a6b;
+    --subtle: #f5f4f2;
+    --accent: #6d4aff;
+    color-scheme: light;
+  }
+  /* Only the app itself: no floating widgets (alarms, toasts, modals) next to it.
+     Browser extensions may inject their own nodes into <body>, so never hide by position. */
+  .print-hidden {
+    display: none !important;
+  }
+  #app-root {
+    display: block !important;
+    min-height: 0 !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .paper-sheet {
+    background: none;
+    box-shadow: none;
+    padding: 0 !important;
+  }
+  .paper-sheet::before,
+  .paper-sheet::after {
+    display: none;
+  }
+}
+
+/* ---------- Quest board: a navy chart table with the ley-line grid, in a gold-rimmed frame ---------- */
+.quest-board {
+  background-color: #101d38;
+  background-image:
+    linear-gradient(rgb(57 195 214 / 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 195 214 / 0.16) 1px, transparent 1px),
+    linear-gradient(rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 195 214 / 0.06) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, #1a2b4d 0%, transparent 70%);
+  background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px, auto;
+  border: 6px solid #0a1328;
+  box-shadow:
+    0 0 0 1px #c9a24b,
+    inset 0 0 0 1px #c9a24b,
+    inset 0 0 0 4px #0a1328,
+    inset 0 0 0 5px rgb(201 162 75 / 0.5),
+    inset 0 8px 24px rgb(0 0 0 / 0.45),
+    0 12px 30px rgb(10 19 40 / 0.3);
+}
+/* A notice on bone paper, edged in gold (quest posters, the login notice). */
+.parchment {
+  background: linear-gradient(180deg, #faf7ef 0%, #f4efe2 60%, #e9e2cf 100%);
+  box-shadow:
+    inset 0 0 0 1px #c9a24b,
+    inset 0 0 0 4px #f4efe2,
+    inset 0 0 0 5px rgb(201 162 75 / 0.5),
+    0 6px 16px rgb(5 10 24 / 0.45);
+}
 
-/* `dark:` follows our own toggle (data-theme on <html>), not the OS setting. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
-@theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cinzel", Georgia, serif;
-
-  --color-app: var(--app);
-  --color-sidebar: var(--sidebar);
-  --color-panel: var(--panel);
-  --color-card: var(--card);
-  --color-card-strong: var(--card-strong);
-  --color-line: var(--line);
-  --color-fg: var(--fg);
-  --color-muted: var(--muted);
-  --color-subtle: var(--subtle);
-  --color-subtle-hover: var(--subtle-hover);
-  --color-accent: var(--accent);
-  --color-accent-from: var(--accent-from);
-  --color-accent-to: var(--accent-to);
-  --color-glow: var(--glow);
-}
-
-/*
- * Guardians of the Grid: the guild's chart room. Night-navy, engraved gold rules,
- * bone paper, crimson seals and the cyan ley-line grid (the colours of the shield).
- */
-:root {
-  --navy: #101d38;
-  --navy-deep: #0a1328;
-  --gold: #c9a24b;
-  --gold-light: #e3c47a;
-  --gold-dark: #8a6a2a;
-  --bone: #e9e2cf;
-  --crimson: #b3263e;
-  --cyan: #39c3d6;
-
-  --app: #e6dfcb;
-  --sidebar: #101d38;
-  --panel: #f4efe2;
-  --card: #faf7ef;
-  --card-strong: #ebe3cc;
-  --line: #d3c6a2;
-  --fg: #101d38;
-  --muted: #4a5675;
-  --subtle: #ece5d2;
-  --subtle-hover: #e2d8bd;
-  --accent: #b3263e;
-  --accent-from: #cf4a5e;
-  --accent-to: #b3263e;
-  --glow: rgb(179 38 62 / 0.2);
-  --grid-minor: rgb(16 29 56 / 0.06);
-  --grid-major: rgb(16 29 56 / 0.11);
-  color-scheme: light;
-}
-
-/* Night watch: the chart room by lamplight. */
-:root[data-theme="dark"] {
-  --app: #0a1328;
-  --sidebar: #070e1f;
-  --panel: #101d38;
-  --card: #13223f;
-  --card-strong: #1a2b4d;
-  --line: #2b3d62;
-  --fg: #e9e2cf;
-  --muted: #a9b1c6;
-  --subtle: #1a2b4d;
-  --subtle-hover: #23375e;
-  --accent: #e85a6f;
-  --accent-from: #f07c8d;
-  --accent-to: #d9455c;
-  --glow: rgb(57 195 214 / 0.22);
-  --grid-minor: rgb(57 195 214 / 0.05);
-  --grid-major: rgb(201 162 75 / 0.09);
-  color-scheme: dark;
-}
-
-/* Lockdown: an S-class threat is loose. Everything turns alarm red (in light and dark mode). */
-:root[data-lockdown] {
-  --sidebar: #4a0d1c;
-  --accent: #e11d48;
-  --accent-from: #fb7185;
-  --accent-to: #e11d48;
-  --glow: rgb(225 29 72 / 0.3);
-}
-:root[data-lockdown][data-theme="dark"] {
-  --sidebar: #2a0510;
-  --app: #1a0a14;
-}
-
-@keyframes lockdown-pulse {
-  0%,
-  100% {
-    box-shadow: inset 0 0 60px 6px rgb(225 29 72 / 0.25);
-  }
-  50% {
-    box-shadow: inset 0 0 120px 18px rgb(225 29 72 / 0.55);
-  }
-}
-.lockdown-vignette {
-  animation: lockdown-pulse 1.6s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lockdown-vignette {
-    animation: none;
-    box-shadow: inset 0 0 80px 10px rgb(225 29 72 / 0.35);
-  }
-}
-
-html,
-body {
-  background-color: var(--app);
-  color: var(--fg);
-}
-body {
-  /* The grid: a fine survey grid with a heavier line every fifth square. */
-  background-image:
-    linear-gradient(var(--grid-major) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(var(--grid-minor) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
-  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
-  background-attachment: fixed;
-}
-h1,
-h2 {
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-}
-
-/* Sidebar: night-navy with a faint grid and an engraved gold edge. (Class name kept from the wood theme.) */
-.wood {
-  background-image:
-    linear-gradient(rgb(57 195 214 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(57 195 214 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(0 0 0 / 0.25), transparent 35%, transparent 65%, rgb(0 0 0 / 0.3));
-  background-size: 16px 16px, 16px 16px, auto;
-  box-shadow:
-    inset -1px 0 0 var(--gold),
-    inset -4px 0 0 rgb(0 0 0 / 0.35),
-    inset -5px 0 0 rgb(201 162 75 / 0.45);
-}
-
-/* A bound sheet of chart paper with a double gold rule: the page content of most pages. */
-.paper-sheet {
-  position: relative;
-  background: linear-gradient(180deg, var(--card) 0%, var(--panel) 100%);
-  border: 1px solid var(--gold);
-  border-radius: 3px;
-  box-shadow:
-    inset 0 0 0 4px var(--panel),
-    inset 0 0 0 5px rgb(201 162 75 / 0.55),
-    0 14px 34px rgb(10 19 40 / 0.28);
-}
-/* Gold rivets in the top corners, like the studs on the shield. */
-.paper-sheet::before,
-.paper-sheet::after {
-  content: "";
-  position: absolute;
-  top: 12px;
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 35%, #f3dc9a, #c9a24b 55%, #8a6a2a);
-  box-shadow:
-    0 0 0 1px #101d38,
-    0 1px 2px rgb(0 0 0 / 0.35);
-}
-.paper-sheet::before {
-  left: 12px;
-}
-.paper-sheet::after {
-  right: 12px;
-}
-
-/* The chronicle is printed (saved as PDF) on white paper, whatever the theme. */
-@media print {
-  :root,
-  :root[data-theme="dark"],
-  :root[data-lockdown] {
-    --app: #ffffff;
-    --panel: #ffffff;
-    --card: #ffffff;
-    --line: #d9d6e3;
-    --fg: #0c0c14;
-    --muted: #5d5a6b;
-    --subtle: #f5f4f2;
-    --accent: #6d4aff;
-    color-scheme: light;
-  }
-  /* Only the app itself: no floating widgets (alarms, toasts, modals) next to it.
-     Browser extensions may inject their own nodes into <body>, so never hide by position. */
-  .print-hidden {
-    display: none !important;
-  }
-  #app-root {
-    display: block !important;
-    min-height: 0 !important;
-  }
-  body {
-    background: #fff !important;
-  }
-  .paper-sheet {
-    background: none;
-    box-shadow: none;
-    padding: 0 !important;
-  }
-  .paper-sheet::before,
-  .paper-sheet::after {
-    display: none;
-  }
-}
-
-/* ---------- Quest board: a navy chart table with the ley-line grid, in a gold-rimmed frame ---------- */
-.quest-board {
-  background-color: #101d38;
-  background-image:
-    linear-gradient(rgb(57 195 214 / 0.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(57 195 214 / 0.16) 1px, transparent 1px),
-    linear-gradient(rgb(57 195 214 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(57 195 214 / 0.06) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 0%, #1a2b4d 0%, transparent 70%);
-  background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px, auto;
-  border: 6px solid #0a1328;
-  box-shadow:
-    0 0 0 1px #c9a24b,
-    inset 0 0 0 1px #c9a24b,
-    inset 0 0 0 4px #0a1328,
-    inset 0 0 0 5px rgb(201 162 75 / 0.5),
-    inset 0 8px 24px rgb(0 0 0 / 0.45),
-    0 12px 30px rgb(10 19 40 / 0.3);
-}
-/* A notice on bone paper, edged in gold (quest posters, the login notice). */
-.parchment {
-  background: linear-gradient(180deg, #faf7ef 0%, #f4efe2 60%, #e9e2cf 100%);
-  box-shadow:
-    inset 0 0 0 1px #c9a24b,
-    inset 0 0 0 4px #f4efe2,
-    inset 0 0 0 5px rgb(201 162 75 / 0.5),
-    0 6px 16px rgb(5 10 24 / 0.45);
+/* A quest column's own scrollbar: thin and gold on the navy board. */
+.quest-column {
+  scrollbar-width: thin;
+  scrollbar-color: #c9a24b66 transparent;
 }

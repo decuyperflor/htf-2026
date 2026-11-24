@@ -130,7 +130,7 @@ function QuestBoardPage() {
   }, [selectedId])
 
   return (
-    <div className="grid gap-8 2xl:grid-cols-[1fr_18rem]">
+    <div className="grid gap-8 min-[2200px]:grid-cols-[1fr_18rem]">
       <section className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">

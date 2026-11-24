@@ -76,7 +76,8 @@ export function QuestBoard({
 
       {/* The navy chart table */}
       <div className="quest-board overflow-x-auto rounded-md p-3 sm:p-4">
-        <div className="grid min-w-[1040px] grid-cols-4 gap-3">
+        {/* Wide enough for a whole poster per column; each column scrolls on its own, so the page keeps its height. */}
+        <div className="grid min-w-[1260px] grid-cols-4 gap-3">
           {GLITCH_STATUSES.map((status, col) => {
             const column = COLUMNS[status]
             const all = glitches.filter((g) => statusOf(g) === status)
@@ -93,7 +94,7 @@ export function QuestBoard({
                 }}
                 onDragLeave={() => setOver((o) => (o === status ? null : o))}
                 onDrop={(e) => onDrop(e, status)}
-                className={`relative flex min-h-[420px] flex-col gap-4 rounded-md p-3 transition-colors ${
+                className={`relative flex h-[calc(100vh-15rem)] min-h-[480px] flex-col gap-4 rounded-md p-3 transition-colors ${
                   over === status ? 'bg-[#39C3D6]/15 ring-2 ring-[#E3C47A]' : 'bg-[#0A1328]/55 ring-1 ring-inset ring-[#C9A24B]/30'
                 }`}
               >
@@ -112,6 +113,8 @@ export function QuestBoard({
                 </header>
                 <p className="-mt-2 text-xs font-medium text-[#E9E2CF]/75">{column.hint}</p>
 
+                {/* Room at the top and right for the rank seal that sticks out of each poster. */}
+                <div className="quest-column -mr-1.5 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pt-3 pr-3.5 pb-1">
                 {cards.map((g) => (
                   <QuestCard
                     key={g.glitchId}
@@ -145,6 +148,7 @@ export function QuestBoard({
                     +{all.length - MAX_SLAIN} more in the Chronicle →
                   </Link>
                 )}
+                </div>
               </section>
             )
           })}
@@ -224,7 +228,7 @@ function QuestCard({
         </span>
         <span className="min-w-0">
           <span className="block font-display text-lg leading-tight font-bold">{g.monsterName}</span>
-          <span className="block truncate text-xs text-[#2B3D62]">
+          <span className="block text-xs leading-snug text-[#2B3D62]">
             {g.locationName} · {g.regionName}
           </span>
         </span>
