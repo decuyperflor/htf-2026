@@ -17,8 +17,24 @@ Om op te starten kan je volgende commando's gebruiken.
 
 ```bash
 npm install
+npm run db:setup   # maakt local.db aan en vult ze met demo-data
 npm run dev
 ```
+
+Pas je `src/db/schema.ts` aan? Draai dan opnieuw `npm run db:setup` (wist en vult de database opnieuw).
+
+### Demo-accounts (lokaal)
+| Codename | Rol | Wachtwoord |
+|---|---|---|
+| `nova` | commander | `achrona` |
+| `ember` | defender | `achrona` |
+| `kael` | defender | `achrona` |
+
+### Datamodel (basis)
+- `guardians` → `role_id` → `roles`; rechten per rol via `role_permissions` → `permissions`
+- `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token)
+- `glitches` ← `echoes` (`glitch_id`, `reporting_guardian_id`)
+- Een nieuwe echo zonder glitch maakt automatisch een nieuwe glitch (`GL-xxxx`, status `LEAKED`)
 ## Beoordeling
 > Hoe wij beoordelen wordt voor de start van de hackathon met alle studenten gedeeld, zodat dit meteen duidelijk is voor iedereen.
 

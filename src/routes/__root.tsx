@@ -6,11 +6,13 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { Sidebar } from '#/components/layout/Sidebar'
+import { getSession } from '#/lib/auth.functions.ts'
 
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
+  // Every route below can read `context.guardian` (null when logged out).
+  beforeLoad: async () => ({ guardian: await getSession() }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -20,19 +22,8 @@ export const Route = createRootRoute({
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
   shellComponent: RootDocument,
-  component: AppLayout,
+  component: Outlet,
 })
-
-function AppLayout() {
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="min-w-0 flex-1 px-16 py-10">
-        <Outlet />
-      </main>
-    </div>
-  )
-}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
