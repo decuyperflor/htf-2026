@@ -13,16 +13,19 @@ import {
   assignAdventurers,
   deleteGlitch,
   getGlitch,
+  getGlitches,
   setQuestAccepted,
   updateGlitchStatus,
 } from '#/lib/glitches.functions.ts'
 import { getGuardians } from '#/lib/guardians.functions.ts'
+import { useShortcuts } from '#/lib/shortcuts.ts'
 
 export const Route = createFileRoute('/_app/glitches/$glitchId')({
   loader: async ({ params }) => {
-    const [glitch, guardians] = await Promise.all([getGlitch({ data: params.glitchId }), getGuardians()])
+    const [glitch, guardians, all] = await Promise.all([getGlitch({ data: params.glitchId }), getGuardians(), getGlitches()])
     if (!glitch) throw notFound()
-    return { glitch, guardians }
+    // Quest-board order (newest first), for j/k.
+    return { glitch, guardians, order: all.map((g) => g.glitchId) }
   },
   head: ({ params }) => ({ meta: [{ title: `${params.glitchId} · Achrona Guild` }] }),
   notFoundComponent: () => (
@@ -37,10 +40,17 @@ export const Route = createFileRoute('/_app/glitches/$glitchId')({
 })
 
 function GlitchPage() {
-  const { glitch, guardians } = Route.useLoaderData()
+  const { glitch, guardians, order } = Route.useLoaderData()
   const { guardian } = Route.useRouteContext()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+
+  const index = order.indexOf(glitch.glitchId)
+  const go = (step: number) => {
+    const next = order[index + step]
+    if (next) router.navigate({ to: '/glitches/$glitchId', params: { glitchId: next } })
+  }
+  useShortcuts({ j: () => go(1), k: () => go(-1), u: () => router.navigate({ to: '/quests' }) })
 
   async function changeStatus(status: GlitchStatus) {
     setError(null)
@@ -83,6 +93,10 @@ function GlitchPage() {
       <Link to="/quests" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
         <ArrowLeft className="size-4" /> Quest board
       </Link>
+      <p className="-mt-6 text-xs text-muted">
+        Quest {index + 1} of {order.length} · <kbd className="rounded border border-line px-1">j</kbd>/<kbd className="rounded border border-line px-1">k</kbd> next/previous ·{' '}
+        <kbd className="rounded border border-line px-1">u</kbd> back
+      </p>
 
       <div className="flex flex-wrap items-start gap-5">
         <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-[#120c2e]">
@@ -126,7 +140,7 @@ function GlitchPage() {
               <select
                 value={glitch.status}
                 onChange={(e) => changeStatus(e.target.value as GlitchStatus)}
-                className="rounded-lg border border-line bg-white px-3 py-2"
+                className="rounded-lg border border-line bg-card px-3 py-2 text-fg"
               >
                 {GLITCH_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -145,7 +159,7 @@ function GlitchPage() {
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
           {error}
         </p>
       )}

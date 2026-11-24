@@ -1,12 +1,13 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Activity, BookOpen, Coins, Eye, LogOut, Map as MapIcon, ScrollText, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpen, Coins, Eye, FileText, Keyboard, LogOut, Map as MapIcon, Moon, ScrollText, Sun, type LucideIcon } from 'lucide-react'
 import { PERMISSIONS, can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
 import { logout } from '#/lib/auth.functions.ts'
+import type { Theme } from '#/lib/theme.ts'
 
 type NavItem = {
   label: string
   icon: LucideIcon
-  to: '/' | '/quests' | '/report' | '/bestiary'
+  to: '/' | '/quests' | '/report' | '/bestiary' | '/chronicle'
   /** Only shown when the guardian has this permission. */
   permission?: Permission
 }
@@ -16,6 +17,7 @@ const navItems: NavItem[] = [
   { label: 'Quest board', icon: ScrollText, to: '/quests' },
   { label: 'Spot a monster', icon: Eye, to: '/report', permission: PERMISSIONS.echoCreate },
   { label: 'Bestiary', icon: BookOpen, to: '/bestiary' },
+  { label: 'Chronicle (PDF report)', icon: FileText, to: '/chronicle' },
 ]
 
 // Icon-only items: the label lives in aria-label/title for screen readers and hover.
@@ -23,7 +25,17 @@ const itemClass =
   'flex size-12 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white'
 const activeClass = 'bg-white/10 text-white'
 
-export function Sidebar({ guardian }: { guardian: SessionGuardian }) {
+export function Sidebar({
+  guardian,
+  theme,
+  onToggleTheme,
+  onShowHelp,
+}: {
+  guardian: SessionGuardian
+  theme: Theme
+  onToggleTheme: () => void
+  onShowHelp: () => void
+}) {
   const router = useRouter()
 
   async function onLogout() {
@@ -33,7 +45,7 @@ export function Sidebar({ guardian }: { guardian: SessionGuardian }) {
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar py-5">
+    <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar py-5 transition-colors print:hidden">
       <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-accent-from to-accent-to text-white shadow-md shadow-black/30">
         <Activity className="size-7" strokeWidth={2} />
       </div>
@@ -55,6 +67,21 @@ export function Sidebar({ guardian }: { guardian: SessionGuardian }) {
             </Link>
           ))}
       </nav>
+
+      <div className="mb-3 flex flex-col items-center gap-1">
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          aria-label={theme === 'dark' ? 'Switch to light mode (d)' : 'Switch to dark mode (d)'}
+          title={theme === 'dark' ? 'Light mode (d)' : 'Dark mode (d)'}
+          className={itemClass}
+        >
+          {theme === 'dark' ? <Sun className="size-5" strokeWidth={1.75} /> : <Moon className="size-5" strokeWidth={1.75} />}
+        </button>
+        <button type="button" onClick={onShowHelp} aria-label="Keyboard shortcuts (?)" title="Keyboard shortcuts (?)" className={itemClass}>
+          <Keyboard className="size-5" strokeWidth={1.75} />
+        </button>
+      </div>
 
       <div className="flex w-full flex-col items-center gap-3 text-center">
         <div

@@ -83,7 +83,7 @@ export function EchoForm({ glitchId, monsters = [], world, submitLabel = 'Report
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
             required
-            className="rounded-lg border border-line bg-white px-3 py-2"
+            className="rounded-lg border border-line bg-card px-3 py-2 text-fg"
           >
             {world.regions.map((r) => (
               <optgroup key={r.regionId} label={r.name}>
@@ -113,7 +113,7 @@ export function EchoForm({ glitchId, monsters = [], world, submitLabel = 'Report
         />
       </label>
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
           {error}
         </p>
       )}

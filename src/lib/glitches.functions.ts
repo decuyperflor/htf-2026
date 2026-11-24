@@ -192,7 +192,7 @@ export const updateGlitchStatus = createServerFn({ method: 'POST' })
     db.transaction((tx) => {
       const result = tx
         .update(glitches)
-        .set({ status: data.status })
+        .set({ status: data.status, slainAt: data.status === 'FIXED' ? new Date().toISOString() : null })
         .where(eq(glitches.glitchId, data.glitchId))
         .run()
       if (result.changes === 0) throw new Error(`Glitch ${data.glitchId} not found`)
@@ -338,3 +338,27 @@ export const deleteGlitch = createServerFn({ method: 'POST' })
     db.delete(glitches).where(eq(glitches.glitchId, glitchId)).run()
     return { ok: true }
   })
+
+export type Threat = { glitchId: string; monsterName: string; locationName: string; regionName: string }
+
+/**
+ * S-class threats still at large (a danger-5 monster, or any monster at a rank-S location).
+ * While there is at least one, the whole guild is in lockdown.
+ */
+export const getThreats = createServerFn({ method: 'GET' }).handler(async (): Promise<Threat[]> => {
+  requireGuardian(PERMISSIONS.glitchView)
+  return db
+    .select({
+      glitchId: glitches.glitchId,
+      monsterName: monsters.name,
+      locationName: locations.name,
+      regionName: regions.name,
+    })
+    .from(glitches)
+    .innerJoin(monsters, eq(monsters.monsterId, glitches.monsterId))
+    .innerJoin(locations, eq(locations.locationId, glitches.locationId))
+    .innerJoin(regions, eq(regions.regionId, locations.regionId))
+    .where(sql`${glitches.status} != 'FIXED' and (${monsters.danger} >= 5 or ${locations.danger} >= 5)`)
+    .orderBy(desc(glitches.timestamp))
+    .all()
+})

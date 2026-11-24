@@ -111,7 +111,7 @@ export function QuestPanel({
 
       <div className="mt-auto flex flex-col gap-2">
         {can(me, PERMISSIONS.questAccept) && !slain && (
-          <Button onClick={toggle} disabled={pending} variant={onQuest ? 'secondary' : 'primary'}>
+          <Button onClick={toggle} disabled={pending} variant={onQuest ? 'secondary' : 'primary'} className={onQuest ? '!border-[#2b2340]/30 !bg-white !text-[#2b2340]' : ''}>
             <Swords className="size-4" />
             {pending ? '…' : onQuest ? 'Leave quest' : 'Accept quest'}
           </Button>

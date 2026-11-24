@@ -52,6 +52,13 @@ In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-the
 - De guild master klikt op een locatie om danger (rank) en beloning in te stellen
 - Wordt een monster `FIXED` (Slain), dan krijgt elk party-lid de beloning van die locatie → goud + leaderboard
 
+### Quest board & workflow
+- **Zoek/filters:** zoeken op monster, plaats, beschrijving, adventurer of ID; filteren op status, regio en rank; sorteren op datum, rank, beloning of sightings. Filters staan in de URL (blijven bewaard als je een quest opent en terugkeert)
+- **Chronicle (PDF):**  is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
+- **Sneltoetsen:** druk op  voor het overzicht (o.a.  kaart,  quest board,  zoeken, / volgende/vorige quest,  dark mode)
+- **Dark mode:** knop in de sidebar of ; onthouden per browser. Op de kaart valt de nacht
+- **Lockdown mode:** zolang er een S-klasse dreiging loose is (monster met gevaar 5 of een monster op een rank-S locatie) kleurt de app rood met een alarmbanner. Verslaan = lockdown voorbij
+
 ### Datamodel
 - `guardians` → `role_id` → `roles`; rechten per rol via `role_permissions` → `permissions`
 - `sessions`: login-sessies (cookie `htf_session`, in de database enkel de SHA-256 hash van het token) + `last_seen_at` voor online-status

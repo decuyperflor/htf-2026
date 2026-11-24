@@ -506,6 +506,9 @@ export function WorldMap({
         </svg>
       )}
 
+      {/* Night falls over Achrona in dark mode */}
+      <div className="pointer-events-none absolute inset-0 hidden bg-[#0b1035]/45 mix-blend-multiply dark:block" aria-hidden />
+
       {/* HUD */}
       <div className="pointer-events-none absolute top-4 left-4 flex flex-wrap items-center gap-2" data-panel>
         {awayFromOverview && (

@@ -113,6 +113,8 @@ export const glitches = sqliteTable('glitches', {
     .notNull()
     .default('guild-gate')
     .references(() => locations.locationId),
+  /** ISO 8601; set when the status becomes FIXED (slain), for the chronicle. */
+  slainAt: text('slain_at'),
 })
 
 /** Gold paid out per adventurer per slain monster (one row each, so never paid twice). */

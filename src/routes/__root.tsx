@@ -7,6 +7,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { getSession } from '#/lib/auth.functions.ts'
+import { THEME_BOOT_SCRIPT } from '#/lib/theme.ts'
 
 import appCss from '../styles.css?url'
 
@@ -27,8 +28,10 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The boot script may set data-theme before React hydrates.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <HeadContent />
       </head>
       <body className="bg-app font-sans antialiased">

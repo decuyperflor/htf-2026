@@ -4,8 +4,8 @@ type ButtonProps = ComponentProps<'button'> & { variant?: 'primary' | 'secondary
 
 const variants = {
   primary: 'bg-accent text-white hover:bg-accent/90',
-  secondary: 'border border-line bg-white text-fg hover:bg-subtle',
-  danger: 'border border-red-200 bg-white text-red-700 hover:bg-red-50',
+  secondary: 'border border-line bg-card text-fg hover:bg-subtle',
+  danger: 'border border-red-200 bg-card text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/50',
 }
 
 export function Button({ variant = 'primary', className = '', ...props }: ButtonProps) {

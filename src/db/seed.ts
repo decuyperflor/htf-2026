@@ -109,7 +109,9 @@ const glitchRows: (typeof glitches.$inferInsert)[] = [
   { glitchId: 'GL-0142', status: 'LEAKED', monsterId: 'wraith', locationId: 'witch-hut', description: 'Time loop detected near the eastern clock tower', timestamp: '2026-11-10T13:42:00Z' },
   { glitchId: 'GL-0141', status: 'ASSESSING', monsterId: 'goblin', locationId: 'fox-hollow', description: 'Magic reserves dropping faster than expected', timestamp: '2026-11-10T11:05:00Z' },
   { glitchId: 'GL-0139', status: 'CONTAINING', monsterId: 'golem', locationId: 'buried-temple', description: 'Portal flicker in the archive vaults', timestamp: '2026-11-09T22:17:00Z' },
-  { glitchId: 'GL-0137', status: 'FIXED', monsterId: 'slime', locationId: 'old-pier', description: 'Echo sensors reporting duplicate signals', timestamp: '2026-11-08T08:30:00Z' },
+  { glitchId: 'GL-0137', status: 'FIXED', monsterId: 'slime', locationId: 'old-pier', description: 'Echo sensors reporting duplicate signals', timestamp: '2026-11-08T08:30:00Z', slainAt: '2026-11-08T15:12:00Z' },
+  { glitchId: 'GL-0136', status: 'FIXED', monsterId: 'goblin', locationId: 'mushroom-ring', description: 'Mushrooms in the fairy ring keep resetting to yesterday', timestamp: '2026-11-07T10:20:00Z', slainAt: '2026-11-07T16:45:00Z' },
+  { glitchId: 'GL-0135', status: 'FIXED', monsterId: 'wraith', locationId: 'waterfall-cave', description: 'The waterfall flows upwards every full hour', timestamp: '2026-11-06T21:03:00Z', slainAt: '2026-11-07T09:30:00Z' },
   { glitchId: 'GL-0143', status: 'LEAKED', monsterId: 'dragon', locationId: 'crater-rim', description: 'The volcano erupts every hour on the hour, backwards', timestamp: '2026-11-10T14:05:00Z' },
   { glitchId: 'GL-0144', status: 'LEAKED', monsterId: 'slime', locationId: 'lily-isle', description: 'Lily pads keep teleporting one metre to the left', timestamp: '2026-11-10T14:20:00Z' },
 ]
@@ -123,6 +125,11 @@ const echoRows: [string, string, string, string][] = [
   ['GL-0139', 'Containment runes placed around the portal', '2026-11-10T07:02:00Z', 'nova'],
   ['GL-0137', 'Echo sensors reporting duplicate signals', '2026-11-08T08:30:00Z', 'kael'],
   ['GL-0137', 'Sensors recalibrated, all signals normal again', '2026-11-08T15:12:00Z', 'nova'],
+  ['GL-0136', 'Mushrooms in the fairy ring keep resetting to yesterday', '2026-11-07T10:20:00Z', 'ember'],
+  ['GL-0136', 'A goblin was seen pocketing hours near the ring', '2026-11-07T12:02:00Z', 'kael'],
+  ['GL-0136', 'Goblin cornered and defeated, time flows normally', '2026-11-07T16:45:00Z', 'ember'],
+  ['GL-0135', 'The waterfall flows upwards every full hour', '2026-11-06T21:03:00Z', 'kael'],
+  ['GL-0135', 'Wraith banished, the water falls down again', '2026-11-07T09:30:00Z', 'ember'],
   ['GL-0143', 'The volcano erupts every hour on the hour, backwards', '2026-11-10T14:05:00Z', 'kael'],
   ['GL-0143', 'Smoke is flowing back into the crater', '2026-11-10T14:09:00Z', 'ember'],
   ['GL-0143', 'Lava froze mid-air above the rim', '2026-11-10T14:12:00Z', 'kael'],
@@ -134,10 +141,18 @@ const assignmentRows: [string, string][] = [
   ['GL-0139', 'ember'],
   ['GL-0142', 'kael'],
   ['GL-0137', 'kael'],
+  ['GL-0136', 'ember'],
+  ['GL-0136', 'kael'],
+  ['GL-0135', 'ember'],
 ]
 
 // [glitchId, adventurer codename, gold] — paid out for monsters already slain.
-const bountyRows: [string, string, number][] = [['GL-0137', 'kael', 50]]
+const bountyRows: [string, string, number, string][] = [
+  ['GL-0137', 'kael', 50, '2026-11-08T15:12:00Z'],
+  ['GL-0136', 'ember', 70, '2026-11-07T16:45:00Z'],
+  ['GL-0136', 'kael', 70, '2026-11-07T16:45:00Z'],
+  ['GL-0135', 'ember', 220, '2026-11-07T09:30:00Z'],
+]
 
 // Wipe and refill so the seed can be re-run safely (children first).
 db.transaction((tx) => {
@@ -199,11 +214,11 @@ db.transaction((tx) => {
     .run()
   tx.insert(bounties)
     .values(
-      bountyRows.map(([glitchId, codename, gold]) => ({
+      bountyRows.map(([glitchId, codename, gold, paidAt]) => ({
         glitchId,
         guardianId: idByCodename.get(codename)!,
         gold,
-        paidAt: '2026-11-08T15:12:00Z',
+        paidAt,
       })),
     )
     .run()
