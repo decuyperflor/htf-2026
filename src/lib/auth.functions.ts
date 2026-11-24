@@ -7,7 +7,7 @@ import { createSession, destroySession, getSessionGuardian } from '#/server/sess
 
 /** Codenames are case-insensitive: stored and compared in lowercase. */
 const CODENAME = /^[a-z0-9_-]{3,20}$/
-const MIN_PASSWORD = 8
+const MIN_PASSWORD = 6
 
 export const getSession = createServerFn({ method: 'GET' }).handler(async () =>
   getSessionGuardian(),

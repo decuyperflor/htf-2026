@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { MagicGauge } from '#/components/MagicGauge.tsx'
 import { magicLevel } from '#/lib/magic.ts'
-import { Coins, Eye, KanbanSquare, List, ScrollText, Search, Trophy, X } from 'lucide-react'
+import { Coins, KanbanSquare, List, ScrollText, Search, Trophy, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
 import { QuestBoard } from '#/components/QuestBoard.tsx'
@@ -146,15 +146,6 @@ function QuestBoardPage() {
               Chronicle (PDF)
             </Link>
             {can(guardian, PERMISSIONS.locationManage) && <SummonButton onDone={() => router.invalidate()} />}
-            {can(guardian, PERMISSIONS.echoCreate) && (
-              <Link
-                to="/report"
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
-              >
-                <Eye className="size-4" />
-                Spot a monster
-              </Link>
-            )}
           </div>
         </div>
 

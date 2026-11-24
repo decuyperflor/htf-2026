@@ -31,7 +31,7 @@ Faalt dat (bv. na een grote schemawijziging), gebruik dan **`npm run db:reset`**
 | `ember` | defender (Adventurer) | `achrona` |
 | `kael` | defender (Adventurer) | `achrona` |
 
-Nieuw account? Via **Join the guild** op de loginpagina (`/register`) maak je zelf een account aan: je start altijd als adventurer (defender) en bent meteen ingelogd. Codename: 3–20 tekens (letters, cijfers, `-`, `_`), wachtwoord min. 8 tekens.
+Nieuw account? Via **Join the guild** op de loginpagina (`/register`) maak je zelf een account aan: je start altijd als adventurer (defender) en bent meteen ingelogd. Codename: 3–20 tekens (letters, cijfers, `-`, `_`), wachtwoord min. 6 tekens. Wachtwoorden worden nooit leesbaar bewaard: enkel een scrypt-hash met een eigen salt per account (`guardians.password_hash`).
 
 ### Thema: de guild van Achrona
 In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-thema.

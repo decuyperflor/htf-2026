@@ -64,10 +64,10 @@ function RegisterPage() {
         type="password"
         autoComplete="new-password"
         required
-        minLength={8}
-        hint="At least 8 characters"
+        minLength={6}
+        hint="At least 6 characters"
       />
-      <NoticeField label="Repeat password" name="confirm" type="password" autoComplete="new-password" required minLength={8} />
+      <NoticeField label="Repeat password" name="confirm" type="password" autoComplete="new-password" required minLength={6} />
       {error && <NoticeError>{error}</NoticeError>}
       <NoticeButton pending={pending}>{pending ? 'Signing the register…' : 'Sign the register'}</NoticeButton>
     </GuildNotice>

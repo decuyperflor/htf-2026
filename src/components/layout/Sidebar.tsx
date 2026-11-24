@@ -1,14 +1,14 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { GuildEmblem } from '#/components/GuildEmblem.tsx'
-import { BookOpen, Coins, Eye, FileText, Keyboard, LogOut, Map as MapIcon, Moon, ScrollText, Sun, type LucideIcon } from 'lucide-react'
-import { PERMISSIONS, can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
+import { BookOpen, Coins, FileText, Keyboard, LogOut, Map as MapIcon, Moon, ScrollText, Sun, type LucideIcon } from 'lucide-react'
+import { can, type Permission, type SessionGuardian } from '#/lib/auth.ts'
 import { logout } from '#/lib/auth.functions.ts'
 import type { Theme } from '#/lib/theme.ts'
 
 type NavItem = {
   label: string
   icon: LucideIcon
-  to: '/' | '/quests' | '/report' | '/bestiary' | '/chronicle'
+  to: '/' | '/quests' | '/bestiary' | '/chronicle'
   /** Only shown when the guardian has this permission. */
   permission?: Permission
 }
@@ -16,7 +16,6 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: 'World map', icon: MapIcon, to: '/' },
   { label: 'Quest board', icon: ScrollText, to: '/quests' },
-  { label: 'Spot a monster', icon: Eye, to: '/report', permission: PERMISSIONS.echoCreate },
   { label: 'Bestiary', icon: BookOpen, to: '/bestiary' },
   { label: 'Chronicle (PDF report)', icon: FileText, to: '/chronicle' },
 ]

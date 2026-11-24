@@ -3,7 +3,6 @@ import { ShieldOff, Siren, WifiOff, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar } from '#/components/layout/Sidebar.tsx'
 import { QuestDialogHost } from '#/components/quest/QuestDialogHost.tsx'
-import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { getThreats } from '#/lib/glitches.functions.ts'
 import { resilient, useOffline } from '#/lib/polling.ts'
 import { SHORTCUTS, useShortcuts } from '#/lib/shortcuts.ts'
@@ -64,7 +63,7 @@ function AppLayout() {
     }
   }, [lockdown])
 
-  const go = (to: '/' | '/quests' | '/report' | '/bestiary' | '/chronicle') => () => {
+  const go = (to: '/' | '/quests' | '/bestiary' | '/chronicle') => () => {
     setHelp(false)
     router.navigate({ to })
   }
@@ -73,7 +72,6 @@ function AppLayout() {
     q: go('/quests'),
     b: go('/bestiary'),
     c: go('/chronicle'),
-    ...(can(guardian, PERMISSIONS.echoCreate) ? { n: go('/report') } : {}),
     d: toggle,
     '?': () => setHelp((h) => !h),
     Escape: (e) => {

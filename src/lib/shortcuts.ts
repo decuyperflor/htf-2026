@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 export const SHORTCUTS: { keys: string[]; label: string; where: string }[] = [
   { keys: ['m'], label: 'World map', where: 'Anywhere' },
   { keys: ['q'], label: 'Quest board', where: 'Anywhere' },
-  { keys: ['n'], label: 'Spot a new monster', where: 'Anywhere' },
   { keys: ['b'], label: 'Bestiary', where: 'Anywhere' },
   { keys: ['c'], label: 'Chronicle (PDF report)', where: 'Anywhere' },
   { keys: ['d'], label: 'Toggle dark mode', where: 'Anywhere' },
