@@ -1,7 +1,8 @@
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Coins, Eye, ScrollText, Search, Trophy, X } from 'lucide-react'
+import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { Coins, Eye, KanbanSquare, List, ScrollText, Search, Trophy, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
+import { QuestBoard } from '#/components/QuestBoard.tsx'
 import { PERMISSIONS, can } from '#/lib/auth.ts'
 import { GLITCH_STATUSES, STATUS_LABELS, questRank, type GlitchListItem, type GlitchStatus } from '#/lib/glitch.ts'
 import { getGlitches } from '#/lib/glitches.functions.ts'
@@ -21,7 +22,7 @@ type SortKey = keyof typeof SORTS
 type StatusFilter = 'all' | 'active' | GlitchStatus
 
 /** Filters live in the URL, so they survive opening a quest and coming back (and can be shared). */
-type QuestSearch = { q?: string; status?: StatusFilter; region?: string; rank?: number; sort?: SortKey }
+type QuestSearch = { q?: string; status?: StatusFilter; region?: string; rank?: number; sort?: SortKey; view?: 'list' }
 
 export const Route = createFileRoute('/_app/quests')({
   validateSearch: (search: Record<string, unknown>): QuestSearch => {
@@ -34,6 +35,7 @@ export const Route = createFileRoute('/_app/quests')({
       region: typeof search.region === 'string' && search.region ? search.region : undefined,
       rank: Number.isInteger(rank) && rank >= 1 && rank <= 5 ? rank : undefined,
       sort: sort in SORTS ? (sort as SortKey) : undefined,
+      view: search.view === 'list' ? 'list' : undefined,
     }
   },
   loader: resilient(async () => {
@@ -89,12 +91,16 @@ function QuestBoardPage() {
   const { guardian } = Route.useRouteContext()
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
+  const router = useRouter()
+  const board = search.view !== 'list'
   const searchRef = useRef<HTMLInputElement>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   usePolling()
 
   const names = new Map(guardians.map((g) => [g.guardianId, g.codename]))
-  const visible = applyFilters(glitches, search, names)
+  const filteredList = applyFilters(glitches, search, names)
+  // On the board, j/k walk column by column (the workflow order).
+  const visible = board ? GLITCH_STATUSES.flatMap((s) => filteredList.filter((g) => g.status === s)) : filteredList
   const filtered = Boolean(search.q || search.status || search.region || search.rank)
 
   function update(patch: Partial<QuestSearch>) {
@@ -223,7 +229,7 @@ function QuestBoardPage() {
             {filtered && (
               <button
                 type="button"
-                onClick={() => navigate({ search: {}, replace: true })}
+                onClick={() => navigate({ search: { view: search.view }, replace: true })}
                 className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-accent hover:bg-subtle"
               >
                 <X className="size-4" /> Clear
@@ -232,12 +238,42 @@ function QuestBoardPage() {
           </div>
         </div>
 
-        <GlitchesTable
-          glitches={visible}
-          guardians={guardians}
-          selectedId={selectedId}
-          empty={filtered ? 'No quests match these filters.' : undefined}
-        />
+        {/* Board (workflow) or list (table) */}
+        <div className="flex items-center gap-1 self-start rounded-lg border border-line bg-card p-1" role="group" aria-label="View">
+          {([
+            [true, 'Board', KanbanSquare],
+            [false, 'List', List],
+          ] as const).map(([isBoard, label, Icon]) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={board === isBoard}
+              onClick={() => update({ view: isBoard ? undefined : 'list' })}
+              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${
+                board === isBoard ? 'bg-accent text-white' : 'text-muted hover:bg-subtle hover:text-fg'
+              }`}
+            >
+              <Icon className="size-4" /> {label}
+            </button>
+          ))}
+        </div>
+
+        {board ? (
+          <QuestBoard
+            glitches={filteredList}
+            guardians={guardians}
+            me={guardian}
+            selectedId={selectedId}
+            onChanged={() => router.invalidate()}
+          />
+        ) : (
+          <GlitchesTable
+            glitches={visible}
+            guardians={guardians}
+            selectedId={selectedId}
+            empty={filtered ? 'No quests match these filters.' : undefined}
+          />
+        )}
         <p className="text-xs text-muted">
           Tip: <kbd className="rounded border border-line px-1">j</kbd>/<kbd className="rounded border border-line px-1">k</kbd> to move,{' '}
           <kbd className="rounded border border-line px-1">Enter</kbd> to open, <kbd className="rounded border border-line px-1">?</kbd> for all shortcuts.

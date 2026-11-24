@@ -53,6 +53,7 @@ In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-the
 - Wordt een monster `FIXED` (Slain), dan krijgt elk party-lid de beloning van die locatie → goud + leaderboard
 
 ### Quest board & workflow
+- **Board (workflow):** het quest board is een houten guild-prikbord met 4 kolommen = de workflow (Spotted → Scouting → Engaged → Slain). Elke quest is een WANTED-poster met wax-zegel (rank), beloning, sightings en party (online/slapend). Adventurers accepteren op de poster; de guild master sleept posters naar de volgende kolom (of klikt **Next step**). Slain toont de laatste 4, de rest staat in de Chronicle. Via **List** krijg je de tabel terug
 - **Zoek/filters:** zoeken op monster, plaats, beschrijving, adventurer of ID; filteren op status, regio en rank; sorteren op datum, rank, beloning of sightings. Filters staan in de URL (blijven bewaard als je een quest opent en terugkeert)
 - **Chronicle (PDF):** `/chronicle` is het rapport voor de Hoge Raad: alle verslagen monsters met hun sightings, wie ze versloeg en het geïnde goud. **Download PDF** opent het printvenster → "Opslaan als PDF" (altijd op wit papier)
 - **Sneltoetsen:** druk op `?` voor het overzicht (o.a. `m` kaart, `q` quest board, `/` zoeken, `j`/`k` volgende/vorige quest, `d` dark mode)

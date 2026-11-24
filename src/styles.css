@@ -118,3 +118,25 @@ body {
     display: none !important;
   }
 }
+
+/* ---------- Guild quest board: cork in a wooden frame, parchment posters ---------- */
+.quest-board {
+  background-color: #c49a6c;
+  background-image:
+    radial-gradient(rgb(90 58 30 / 0.22) 1px, transparent 1.6px),
+    radial-gradient(rgb(255 240 210 / 0.18) 1px, transparent 1.6px);
+  background-size: 7px 7px, 11px 11px;
+  background-position: 0 0, 3px 4px;
+  border: 10px solid #6b4423;
+  box-shadow:
+    inset 0 0 0 2px #3b2412,
+    inset 0 6px 18px rgb(40 20 0 / 0.35),
+    0 12px 30px rgb(40 20 0 / 0.25);
+}
+:root[data-theme="dark"] .quest-board {
+  background-color: #8a6440;
+  border-color: #4a2e16;
+}
+.parchment {
+  background: radial-gradient(ellipse at 50% 40%, #fdf5e2 0%, #f3e0b7 70%, #e3c690 100%);
+}
