@@ -1,7 +1,6 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { Activity } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Button } from '#/components/ui/Button.tsx'
+import { GuildNotice, NoticeButton, NoticeError, NoticeField, NoticeLink } from '#/components/auth/GuildNotice.tsx'
 import { login } from '#/lib/auth.functions.ts'
 
 export const Route = createFileRoute('/login')({
@@ -39,52 +38,20 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sidebar px-4">
-      <form
-        onSubmit={onSubmit}
-        className="flex w-full max-w-sm flex-col gap-5 rounded-3xl bg-panel p-8 shadow-xl shadow-black/30"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-linear-to-br from-accent-from to-accent-to text-white">
-            <Activity className="size-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold text-fg">Guardians of the Grid</h1>
-            <p className="text-sm text-muted">Enter the guild hall of Achrona</p>
-          </div>
-        </div>
-
-        <label className="flex flex-col gap-1.5 text-sm text-fg">
-          Codename
-          <input
-            name="codename"
-            autoComplete="username"
-            required
-            autoFocus
-            className="rounded-lg border border-line px-3 py-2 outline-none focus:border-accent"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm text-fg">
-          Password
-          <input
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            className="rounded-lg border border-line px-3 py-2 outline-none focus:border-accent"
-          />
-        </label>
-
-        {error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
-            {error}
-          </p>
-        )}
-
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Logging in…' : 'Log in'}
-        </Button>
-      </form>
-    </div>
+    <GuildNotice
+      title="Guild sign-in"
+      subtitle="Show your codename at the guild gate"
+      onSubmit={onSubmit}
+      footer={
+        <>
+          New in Achrona? <NoticeLink to="/register">Join the guild</NoticeLink>
+        </>
+      }
+    >
+      <NoticeField label="Codename" name="codename" autoComplete="username" required autoFocus />
+      <NoticeField label="Password" name="password" type="password" autoComplete="current-password" required />
+      {error && <NoticeError>{error}</NoticeError>}
+      <NoticeButton pending={pending}>{pending ? 'Opening the gate…' : 'Enter the guild hall'}</NoticeButton>
+    </GuildNotice>
   )
 }

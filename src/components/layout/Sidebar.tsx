@@ -45,7 +45,7 @@ export function Sidebar({
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar py-5 transition-colors print:hidden">
+    <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar wood py-5 transition-colors print:hidden">
       <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-accent-from to-accent-to text-white shadow-md shadow-black/30">
         <Activity className="size-7" strokeWidth={2} />
       </div>

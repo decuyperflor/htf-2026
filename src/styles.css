@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 /* `dark:` follows our own toggle (data-theme on <html>), not the OS setting. */
@@ -6,6 +6,7 @@
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cinzel", Georgia, serif;
 
   --color-app: var(--app);
   --color-sidebar: var(--sidebar);
@@ -23,39 +24,45 @@
   --color-glow: var(--glow);
 }
 
+/* The guild hall: cork walls, dark wood, parchment notices and red wax. */
 :root {
-  --app: #ffffff;
-  --sidebar: #1b1340;
-  --panel: #ffffff;
-  --card: #ffffff;
-  --card-strong: #f5f4f2;
-  --line: #eae7e4;
-  --fg: #0c0c14;
-  --muted: #706d6b;
-  --subtle: #f5f4f2;
-  --subtle-hover: #eae7e4;
-  --accent: #6d4aff;
-  --accent-from: #a995ff;
-  --accent-to: #6d4aff;
-  --glow: rgb(109 74 255 / 0.2);
+  --app: #c49a6c;
+  --sidebar: #3b2412;
+  --panel: #f6ead0;
+  --card: #f8eed6;
+  --card-strong: #efdfbb;
+  --line: #d2b98a;
+  --fg: #2b1d0e;
+  --muted: #6b4e26;
+  --subtle: #efe0bd;
+  --subtle-hover: #e6d2a6;
+  --accent: #a8321e;
+  --accent-from: #d9653b;
+  --accent-to: #a8321e;
+  --glow: rgb(168 50 30 / 0.2);
+  --cork-dot: rgb(90 58 30 / 0.22);
+  --cork-light: rgb(255 240 210 / 0.18);
   color-scheme: light;
 }
 
+/* Night in the guild hall: candle-lit wood and aged parchment. */
 :root[data-theme="dark"] {
-  --app: #0f0b24;
-  --sidebar: #0a0718;
-  --panel: #161033;
-  --card: #1a1438;
-  --card-strong: #221a48;
-  --line: #2e2656;
-  --fg: #ece9ff;
-  --muted: #a19bc4;
-  --subtle: #221a48;
-  --subtle-hover: #2e2656;
-  --accent: #8b6cff;
-  --accent-from: #b4a3ff;
-  --accent-to: #7a57ff;
-  --glow: rgb(139 108 255 / 0.25);
+  --app: #2a1b10;
+  --sidebar: #160d06;
+  --panel: #3a2817;
+  --card: #3d2a18;
+  --card-strong: #4a331d;
+  --line: #5c4227;
+  --fg: #f3e6c8;
+  --muted: #c9ad80;
+  --subtle: #4a331d;
+  --subtle-hover: #5c4227;
+  --accent: #e0703f;
+  --accent-from: #f09a6a;
+  --accent-to: #d0602e;
+  --glow: rgb(224 112 63 / 0.25);
+  --cork-dot: rgb(0 0 0 / 0.3);
+  --cork-light: rgb(255 220 160 / 0.05);
   color-scheme: dark;
 }
 
@@ -96,6 +103,56 @@ body {
   background-color: var(--app);
   color: var(--fg);
 }
+body {
+  /* Cork texture everywhere. */
+  background-image:
+    radial-gradient(var(--cork-dot) 1px, transparent 1.6px),
+    radial-gradient(var(--cork-light) 1px, transparent 1.6px);
+  background-size: 7px 7px, 11px 11px;
+  background-position: 0 0, 3px 4px;
+  background-attachment: fixed;
+}
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+/* Dark wood (sidebar). */
+.wood {
+  background-image:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 11px),
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.12) 0 1px, transparent 1px 23px),
+    linear-gradient(90deg, rgb(0 0 0 / 0.2), transparent 30%, transparent 70%, rgb(0 0 0 / 0.25));
+  box-shadow: inset -3px 0 0 rgb(0 0 0 / 0.35);
+}
+
+/* A big parchment notice pinned to the wall: the page content of most pages. */
+.paper-sheet {
+  position: relative;
+  background: radial-gradient(ellipse at 50% 30%, var(--card) 0%, var(--panel) 75%, var(--card-strong) 100%);
+  border-radius: 4px;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.4) inset,
+    0 14px 34px rgb(40 20 0 / 0.35);
+}
+.paper-sheet::before,
+.paper-sheet::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #ff8a8a, #b3261e);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.4);
+}
+.paper-sheet::before {
+  left: 14px;
+}
+.paper-sheet::after {
+  right: 14px;
+}
 
 /* The chronicle is printed (saved as PDF) on white paper, whatever the theme. */
 @media print {
@@ -116,6 +173,18 @@ body {
   .print-hidden,
   body > div:not(:first-child) {
     display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .paper-sheet {
+    background: none;
+    box-shadow: none;
+    padding: 0 !important;
+  }
+  .paper-sheet::before,
+  .paper-sheet::after {
+    display: none;
   }
 }
 

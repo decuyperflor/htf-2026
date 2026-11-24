@@ -31,8 +31,12 @@ Faalt dat (bv. na een grote schemawijziging), gebruik dan **`npm run db:reset`**
 | `ember` | defender (Adventurer) | `achrona` |
 | `kael` | defender (Adventurer) | `achrona` |
 
+Nieuw account? Via **Join the guild** op de loginpagina (`/register`) maak je zelf een account aan: je start altijd als adventurer (defender) en bent meteen ingelogd. Codename: 3–20 tekens (letters, cijfers, `-`, `_`), wachtwoord min. 8 tekens.
+
 ### Thema: de guild van Achrona
 In de code blijven de namen uit de opdracht; in de UI gebruiken we het guild-thema.
+
+De hele site ziet eruit als de guild hall: kurk op de muren, een houten sidebar, perkament voor de inhoud, rode wax-zegels en Cinzel voor titels. Login en registratie zijn een vastgeprikt bericht op het quest board.
 
 | Code | UI |
 |---|---|

@@ -1,4 +1,4 @@
-import { Link, Outlet, createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { Link, Outlet, createFileRoute, redirect, useRouter, useRouterState } from '@tanstack/react-router'
 import { Siren, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar } from '#/components/layout/Sidebar.tsx'
@@ -27,6 +27,10 @@ function AppLayout() {
   const { theme, toggle } = useTheme()
   const [help, setHelp] = useState(false)
   const lockdown = threats.length > 0
+  // The map and the quest board bring their own surface; every other page is a
+  // parchment sheet pinned to the guild wall.
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const ownSurface = pathname === '/' || pathname === '/quests'
 
   // Lockdown recolours the whole app (see styles.css).
   useEffect(() => {
@@ -60,7 +64,13 @@ function AppLayout() {
     <div className="flex min-h-screen">
       <Sidebar guardian={guardian} theme={theme} onToggleTheme={toggle} onShowHelp={() => setHelp(true)} />
       <main className="min-w-0 flex-1 px-6 py-8 md:px-16 md:py-10 print:p-0">
-        <Outlet />
+        {ownSurface ? (
+          <Outlet />
+        ) : (
+          <div className="paper-sheet mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
+            <Outlet />
+          </div>
+        )}
       </main>
 
       {lockdown && (
