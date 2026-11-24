@@ -191,10 +191,14 @@ h2 {
     --accent: #6d4aff;
     color-scheme: light;
   }
-  /* Only the app itself: no devtools or other floating widgets next to it. */
-  .print-hidden,
-  body > div:not(:first-child) {
+  /* Only the app itself: no floating widgets (alarms, toasts, modals) next to it.
+     Browser extensions may inject their own nodes into <body>, so never hide by position. */
+  .print-hidden {
     display: none !important;
+  }
+  #app-root {
+    display: block !important;
+    min-height: 0 !important;
   }
   body {
     background: #fff !important;

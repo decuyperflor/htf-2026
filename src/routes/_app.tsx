@@ -83,7 +83,7 @@ function AppLayout() {
   })
 
   return (
-    <div className="flex min-h-screen">
+    <div id="app-root" className="flex min-h-screen">
       <Sidebar guardian={guardian} theme={theme} onToggleTheme={toggle} onShowHelp={() => setHelp(true)} />
       <main className="min-w-0 flex-1 px-6 py-8 md:px-16 md:py-10 print:p-0">
         {ownSurface ? (
